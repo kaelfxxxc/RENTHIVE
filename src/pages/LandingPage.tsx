@@ -41,6 +41,7 @@ const faqs = [
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [showAuthChoice, setShowAuthChoice] = useState(false);
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -59,7 +60,7 @@ export default function LandingPage() {
           </nav>
           <div className="flex items-center gap-2">
             <Link to="/login"><Button variant="ghost" size="sm">Sign in</Button></Link>
-            <Link to="/register"><Button size="sm">Get Started</Button></Link>
+            <Button size="sm" onClick={() => setShowAuthChoice(true)}>Get Started</Button>
           </div>
         </div>
       </header>
@@ -84,7 +85,7 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link to="/renter/home"><Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white">Browse Rentals <ArrowRight className="w-4 h-4 ml-1" /></Button></Link>
-              <Link to="/register?role=lessor"><Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10">List Your Product</Button></Link>
+              <Link to="/register?role=lessor"><Button size="lg" variant="primary" className="bg-amber-500! hover:bg-amber-600! text-white!">List Your Product</Button></Link>
             </div>
             <div className="flex items-center gap-6 mt-8 text-sm text-white/50">
               <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" />Identity verified</span>
@@ -265,6 +266,35 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {showAuthChoice && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={() => setShowAuthChoice(false)}>
+          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0F172A] p-6 text-white shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="mb-5 text-center">
+              <p className="text-xs uppercase tracking-[0.3em] text-amber-400/80">Get Started</p>
+              <h2 className="mt-2 text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>Choose your account type</h2>
+              <p className="mt-2 text-sm text-white/60">Pick the sign-in path that matches how you use RentHive.</p>
+            </div>
+
+            <div className="space-y-3">
+              <Link to="/login?role=renter" onClick={() => setShowAuthChoice(false)}>
+                <Button size="lg" className="w-full bg-amber-500 hover:bg-amber-600 text-white">Renter Sign In</Button>
+              </Link>
+              <Link to="/login?role=lessor" onClick={() => setShowAuthChoice(false)}>
+                <Button size="lg" className="w-full bg-orange-500 hover:bg-orange-600 text-white">Lessor Sign In</Button>
+              </Link>
+            </div>
+
+            <button
+              type="button"
+              className="mt-5 w-full text-sm text-white/50 hover:text-white transition-colors"
+              onClick={() => setShowAuthChoice(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
