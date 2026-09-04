@@ -15,3 +15,13 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 // Untyped alias for complex queries where TS generics interfere
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const db = supabase as any;
+
+/** The configured project URL, for display in admin diagnostics. */
+export const supabaseProjectUrl = supabaseUrl;
+
+/**
+ * Project ref parsed out of the configured URL, so the admin page shows the
+ * project it is actually talking to rather than a hardcoded string.
+ */
+export const supabaseProjectRef =
+  supabaseUrl.match(/^https?:\/\/([^.]+)\.supabase\./)?.[1] ?? null;

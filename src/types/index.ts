@@ -3,7 +3,7 @@ export type VerificationStatus = "not_started" | "pending" | "under_review" | "v
 export type ListingStatus = "draft" | "pending_review" | "published" | "unpublished" | "rejected" | "suspended";
 export type RentalStatus = "draft" | "pending" | "accepted" | "declined" | "cancelled" | "payment_pending" | "confirmed" | "active" | "returned" | "completed" | "disputed";
 export type PaymentStatus = "pending" | "processing" | "paid" | "failed" | "cancelled" | "refunded" | "held" | "released" | "disputed";
-export type DisputeStatus = "open" | "under_review" | "waiting_for_evidence" | "resolved" | "rejected" | "escalated" | "closed";
+export type DisputeStatus = "open" | "under_review" | "waiting_for_evidence" | "resolved_complainant" | "resolved_respondent" | "closed" | "rejected" | "escalated";
 export type ProductCondition = "new" | "like_new" | "good" | "fair" | "poor";
 
 export interface Profile {
@@ -137,8 +137,12 @@ export interface Review {
   reviewer_id: string;
   reviewee_id: string;
   listing_id: string | null;
-  rating: number;
+  overall_rating: number;
+  communication_rating: number | null;
+  accuracy_rating: number | null;
+  condition_rating: number | null;
   comment: string | null;
+  review_type: "renter_to_lessor" | "lessor_to_renter" | null;
   created_at: string;
   reviewer?: Profile;
 }
@@ -146,18 +150,38 @@ export interface Review {
 export interface Dispute {
   id: string;
   rental_request_id: string;
-  reporter_id: string;
+  complainant_id: string;
   respondent_id: string;
   reason: string;
-  description: string;
+  description: string | null;
   status: DisputeStatus;
-  admin_notes: string | null;
   resolution: string | null;
   resolution_amount: number | null;
   created_at: string;
   updated_at: string;
   resolved_at: string | null;
-  reporter?: Profile;
+  complainant?: Profile;
   respondent?: Profile;
   rental_request?: RentalRequest;
+}
+
+export interface AuditLog {
+  id: string;
+  changed_by: string | null;
+  action: string;
+  table_name: string;
+  record_id: string | null;
+  changes: Record<string, unknown> | null;
+  created_at: string;
+  actor?: Profile;
+}
+
+export interface PlatformSettings {
+  site_name: string;
+  support_email: string;
+  platform_fee_percent: number;
+  reservation_fee_percent: number;
+  max_rental_days: number;
+  require_verification: boolean;
+  allow_guest_browse: boolean;
 }

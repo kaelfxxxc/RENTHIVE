@@ -40,8 +40,10 @@ export default function ListingDetailPage() {
       .single();
     if (data) {
       setListing(data as unknown as Listing);
-      // Track view
-      await db.from("listings").update({ views: ((data as { views?: number }).views || 0) + 1 }).eq("id", id!);
+      // Track view. A direct UPDATE is blocked by RLS for everyone except the
+      // owner, so this goes through a security-definer function that only
+      // touches published listings.
+      await db.rpc("increment_listing_views", { p_listing: id! });
     }
 
     const { data: rev } = await supabase
@@ -201,7 +203,7 @@ export default function ListingDetailPage() {
                         <Avatar src={r.reviewer?.avatar_url} name={r.reviewer?.full_name} size="sm" />
                         <div>
                           <p className="text-sm font-medium">{r.reviewer?.full_name}</p>
-                          <StarRating value={r.rating} size={12} />
+                          <StarRating value={r.overall_rating} size={12} />
                         </div>
                         <p className="text-xs text-[var(--muted-foreground)] ml-auto">{new Date(r.created_at).toLocaleDateString()}</p>
                       </div>

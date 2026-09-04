@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, ShieldCheck, Star, Edit2, Check, X } from "lucide-react";
 import { supabase, db } from "../lib/supabase";
@@ -7,6 +7,7 @@ import { Input } from "../components/ui/Input";
 import { Badge, statusBadge } from "../components/ui/Badge";
 import { useToast } from "../components/ui/Toast";
 import { useAuth } from "../contexts/AuthContext";
+import type { ProfileStats } from "../types/database";
 
 interface ProfilePageProps {
   layout: React.ComponentType<{ children: React.ReactNode }>;
@@ -18,10 +19,29 @@ export default function ProfilePage({ layout: Layout }: ProfilePageProps) {
   const { success, error: toastError } = useToast();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [stats, setStats] = useState<ProfileStats | null>(null);
   const [form, setForm] = useState({
     full_name: profile?.full_name || "",
     phone: profile?.phone || "",
   });
+
+  // Rating / completed / reviews were hardcoded placeholders; these are the
+  // real aggregates for this account.
+  useEffect(() => {
+    if (!profile) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await db.rpc("profile_stats", { p_user: profile.id });
+      if (cancelled || !data) return;
+      const raw = data as Record<string, unknown>;
+      setStats({
+        avg_rating: raw.avg_rating === null || raw.avg_rating === undefined ? null : Number(raw.avg_rating),
+        review_count: Number(raw.review_count ?? 0),
+        completed_rentals: Number(raw.completed_rentals ?? 0),
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [profile]);
 
   const handleSave = async (e: FormEvent) => {
     e.preventDefault();
@@ -147,9 +167,9 @@ export default function ProfilePage({ layout: Layout }: ProfilePageProps) {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Rating", value: "—", icon: <Star className="w-5 h-5 text-amber-500" /> },
-            { label: "Completed", value: "0", icon: <ShieldCheck className="w-5 h-5 text-teal-500" /> },
-            { label: "Reviews", value: "0", icon: <Star className="w-5 h-5 text-purple-500" /> },
+            { label: "Rating", value: stats?.avg_rating ? stats.avg_rating.toFixed(1) : "—", icon: <Star className="w-5 h-5 text-amber-500" /> },
+            { label: "Completed", value: String(stats?.completed_rentals ?? 0), icon: <ShieldCheck className="w-5 h-5 text-teal-500" /> },
+            { label: "Reviews", value: String(stats?.review_count ?? 0), icon: <Star className="w-5 h-5 text-purple-500" /> },
           ].map(s => (
             <div key={s.label} className="bg-white border border-[var(--border)] rounded-xl p-4 text-center">
               <div className="flex justify-center mb-1">{s.icon}</div>

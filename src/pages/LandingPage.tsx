@@ -1,19 +1,13 @@
 import { Link } from "react-router-dom";
 import { Hexagon, ShieldCheck, Star, ArrowRight, CheckCircle2, Camera, Package, Clock, Wallet, MessageSquare, ChevronDown, ChevronUp, Search } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
+import { db } from "../lib/supabase";
+import type { PublicCategoryCount } from "../types/database";
 
-const categories = [
-  { name: "Electronics", icon: "💻", count: 245, slug: "electronics" },
-  { name: "Tools & Equipment", icon: "🔧", count: 182, slug: "tools" },
-  { name: "Sports & Outdoors", icon: "🏕️", count: 134, slug: "outdoors" },
-  { name: "Cameras & Photo", icon: "📷", count: 98, slug: "cameras" },
-  { name: "Audio & Music", icon: "🎸", count: 76, slug: "audio" },
-  { name: "Vehicles", icon: "🚗", count: 65, slug: "vehicles" },
-  { name: "Furniture", icon: "🪑", count: 112, slug: "furniture" },
-  { name: "Party Supplies", icon: "🎉", count: 89, slug: "party" },
-];
+/** Fallback glyph when a category row has no icon set. */
+const FALLBACK_ICON = "📦";
 
 const howItWorks = [
   { step: "01", title: "Register & Verify", desc: "Create your account and verify your identity for a secure marketplace experience." },
@@ -43,6 +37,24 @@ const faqs = [
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showAuthChoice, setShowAuthChoice] = useState(false);
+  const [categories, setCategories] = useState<PublicCategoryCount[]>([]);
+
+  // Categories and their counts come from the `categories` table joined
+  // against published listings — anon-readable so this works pre-login.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await db.rpc("public_category_counts");
+      if (cancelled || !data) return;
+      setCategories(
+        (data as PublicCategoryCount[]).map(c => ({
+          ...c,
+          listing_count: Number(c.listing_count ?? 0),
+        })),
+      );
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -127,21 +139,25 @@ export default function LandingPage() {
       </section>
 
       {/* Categories */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-8" style={{ fontFamily: "var(--font-display)" }}>Popular Categories</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-            {categories.map(cat => (
-              <Link key={cat.name} to={`/renter/search?category=${cat.slug}`}
-                className="flex flex-col items-center p-4 rounded-2xl border border-[var(--border)] hover:border-amber-300 hover:bg-amber-50 transition-all group cursor-pointer text-center">
-                <span className="text-3xl mb-2">{cat.icon}</span>
-                <p className="text-xs font-semibold text-[var(--foreground)] group-hover:text-amber-700">{cat.name}</p>
-                <p className="text-xs text-[var(--muted-foreground)]">{cat.count} items</p>
-              </Link>
-            ))}
+      {categories.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4">
+            <h2 className="text-2xl font-bold mb-8" style={{ fontFamily: "var(--font-display)" }}>Popular Categories</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+              {categories.map(cat => (
+                <Link key={cat.id} to={`/renter/search?category=${cat.slug}`}
+                  className="flex flex-col items-center p-4 rounded-2xl border border-[var(--border)] hover:border-amber-300 hover:bg-amber-50 transition-all group cursor-pointer text-center">
+                  <span className="text-3xl mb-2">{cat.icon || FALLBACK_ICON}</span>
+                  <p className="text-xs font-semibold text-[var(--foreground)] group-hover:text-amber-700">{cat.name}</p>
+                  <p className="text-xs text-[var(--muted-foreground)]">
+                    {cat.listing_count} {cat.listing_count === 1 ? "item" : "items"}
+                  </p>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* How it works */}
       <section id="how-it-works" className="py-20 bg-[var(--muted)]">

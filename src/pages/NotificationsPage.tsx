@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Bell, CheckCheck } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Bell, CheckCheck, ChevronRight } from "lucide-react";
 import { supabase, db } from "../lib/supabase";
 import { EmptyState } from "../components/ui/EmptyState";
 import { TableSkeleton } from "../components/ui/Skeleton";
@@ -19,6 +20,7 @@ interface NotificationsPageProps {
 
 export default function NotificationsPage({ layout: Layout }: NotificationsPageProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,6 +60,13 @@ export default function NotificationsPage({ layout: Layout }: NotificationsPageP
     setNotifications(n => n.map(x => x.id === id ? { ...x, is_read: true } : x));
   };
 
+  // Triggers store an in-app route on every notification; follow it so the
+  // list is a way into the app rather than a dead end.
+  const handleClick = async (n: Notification) => {
+    if (!n.is_read) await markRead(n.id);
+    if (n.link) navigate(n.link);
+  };
+
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
@@ -82,7 +91,7 @@ export default function NotificationsPage({ layout: Layout }: NotificationsPageP
             {notifications.map(n => (
               <button
                 key={n.id}
-                onClick={() => markRead(n.id)}
+                onClick={() => handleClick(n)}
                 className={`w-full flex items-start gap-4 p-4 rounded-xl text-left transition-colors ${n.is_read ? "bg-white hover:bg-[var(--muted)]" : "bg-amber-50 border border-amber-100 hover:bg-amber-100"}`}
               >
                 <span className="text-2xl shrink-0 mt-0.5">{typeIcons[n.type] || typeIcons.default}</span>
@@ -92,6 +101,7 @@ export default function NotificationsPage({ layout: Layout }: NotificationsPageP
                   <p className="text-xs text-[var(--muted-foreground)] mt-1">{new Date(n.created_at).toLocaleString()}</p>
                 </div>
                 {!n.is_read && <div className="w-2 h-2 rounded-full bg-amber-500 mt-1.5 shrink-0" />}
+                {n.link && <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)] mt-0.5 shrink-0" />}
               </button>
             ))}
           </div>

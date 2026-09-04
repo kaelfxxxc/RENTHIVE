@@ -1,13 +1,7 @@
--- RentHive Database Schema
--- Paste this entire file into your Supabase SQL Editor and click Run.
--- https://supabase.com/dashboard/project/btqajcroxzbvjkovpiyp/sql
-
 -- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
--- ────────────────────────────────────────────────────────────────
 -- PROFILES
--- ────────────────────────────────────────────────────────────────
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text,
@@ -22,10 +16,7 @@ create table if not exists profiles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
--- ────────────────────────────────────────────────────────────────
 -- CATEGORIES
--- ────────────────────────────────────────────────────────────────
 create table if not exists categories (
   id uuid primary key default uuid_generate_v4(),
   name text not null,
@@ -34,10 +25,7 @@ create table if not exists categories (
   description text,
   created_at timestamptz not null default now()
 );
-
--- ────────────────────────────────────────────────────────────────
 -- LISTINGS
--- ────────────────────────────────────────────────────────────────
 create table if not exists listings (
   id uuid primary key default uuid_generate_v4(),
   lessor_id uuid not null references profiles(id) on delete cascade,
@@ -67,10 +55,7 @@ create table if not exists listings (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
--- ────────────────────────────────────────────────────────────────
 -- RENTAL REQUESTS
--- ────────────────────────────────────────────────────────────────
 create table if not exists rental_requests (
   id uuid primary key default uuid_generate_v4(),
   listing_id uuid not null references listings(id) on delete restrict,
@@ -93,10 +78,7 @@ create table if not exists rental_requests (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
--- ────────────────────────────────────────────────────────────────
 -- PAYMENTS
--- ────────────────────────────────────────────────────────────────
 create table if not exists payments (
   id uuid primary key default uuid_generate_v4(),
   rental_request_id uuid not null references rental_requests(id) on delete restrict,
@@ -112,11 +94,8 @@ create table if not exists payments (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
--- ────────────────────────────────────────────────────────────────
 -- DISPUTES
 -- complainant_id = person who filed; respondent_id = person accused
--- ────────────────────────────────────────────────────────────────
 create table if not exists disputes (
   id uuid primary key default uuid_generate_v4(),
   rental_request_id uuid not null references rental_requests(id) on delete restrict,
@@ -133,10 +112,7 @@ create table if not exists disputes (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
--- ────────────────────────────────────────────────────────────────
 -- CONVERSATIONS
--- ────────────────────────────────────────────────────────────────
 create table if not exists conversations (
   id uuid primary key default uuid_generate_v4(),
   renter_id uuid not null references profiles(id),
@@ -146,10 +122,7 @@ create table if not exists conversations (
   created_at timestamptz not null default now(),
   unique(renter_id, lessor_id, rental_request_id)
 );
-
--- ────────────────────────────────────────────────────────────────
 -- MESSAGES
--- ────────────────────────────────────────────────────────────────
 create table if not exists messages (
   id uuid primary key default uuid_generate_v4(),
   conversation_id uuid not null references conversations(id) on delete cascade,
@@ -158,10 +131,7 @@ create table if not exists messages (
   is_read boolean not null default false,
   created_at timestamptz not null default now()
 );
-
--- ────────────────────────────────────────────────────────────────
 -- NOTIFICATIONS
--- ────────────────────────────────────────────────────────────────
 create table if not exists notifications (
   id uuid primary key default uuid_generate_v4(),
   user_id uuid not null references profiles(id) on delete cascade,
@@ -172,11 +142,8 @@ create table if not exists notifications (
   link text,
   created_at timestamptz not null default now()
 );
-
--- ────────────────────────────────────────────────────────────────
 -- REVIEWS
 -- overall_rating used consistently throughout the app
--- ────────────────────────────────────────────────────────────────
 create table if not exists reviews (
   id uuid primary key default uuid_generate_v4(),
   rental_request_id uuid not null references rental_requests(id),
@@ -192,10 +159,7 @@ create table if not exists reviews (
   created_at timestamptz not null default now(),
   unique(rental_request_id, reviewer_id)
 );
-
--- ────────────────────────────────────────────────────────────────
 -- IDENTITY VERIFICATIONS
--- ────────────────────────────────────────────────────────────────
 create table if not exists identity_verifications (
   id uuid primary key default uuid_generate_v4(),
   user_id uuid not null references profiles(id) on delete cascade,
@@ -211,10 +175,7 @@ create table if not exists identity_verifications (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
--- ────────────────────────────────────────────────────────────────
 -- AUDIT LOGS
--- ────────────────────────────────────────────────────────────────
 create table if not exists audit_logs (
   id uuid primary key default uuid_generate_v4(),
   changed_by uuid references profiles(id),
@@ -224,10 +185,7 @@ create table if not exists audit_logs (
   changes jsonb,
   created_at timestamptz not null default now()
 );
-
--- ────────────────────────────────────────────────────────────────
 -- INDEXES
--- ────────────────────────────────────────────────────────────────
 create index if not exists idx_listings_lessor_id on listings(lessor_id);
 create index if not exists idx_listings_status on listings(status);
 create index if not exists idx_listings_category_id on listings(category_id);
@@ -239,9 +197,7 @@ create index if not exists idx_notifications_user_id on notifications(user_id);
 create index if not exists idx_reviews_reviewee_id on reviews(reviewee_id);
 create index if not exists idx_disputes_rental_request_id on disputes(rental_request_id);
 
--- ────────────────────────────────────────────────────────────────
 -- TRIGGER: auto-update updated_at
--- ────────────────────────────────────────────────────────────────
 create or replace function update_updated_at()
 returns trigger as $$
 begin new.updated_at = now(); return new; end;
@@ -265,9 +221,7 @@ do $$ begin
   end if;
 end $$;
 
--- ────────────────────────────────────────────────────────────────
 -- TRIGGER: auto-create profile on signup
--- ────────────────────────────────────────────────────────────────
 create or replace function handle_new_user()
 returns trigger as $$
 begin
@@ -292,9 +246,7 @@ do $$ begin
   end if;
 end $$;
 
--- ────────────────────────────────────────────────────────────────
 -- ENABLE ROW LEVEL SECURITY
--- ────────────────────────────────────────────────────────────────
 alter table profiles enable row level security;
 alter table categories enable row level security;
 alter table listings enable row level security;
@@ -308,10 +260,7 @@ alter table reviews enable row level security;
 alter table identity_verifications enable row level security;
 alter table audit_logs enable row level security;
 
--- ────────────────────────────────────────────────────────────────
 -- RLS POLICIES
--- ────────────────────────────────────────────────────────────────
-
 -- Profiles
 drop policy if exists "Public read profiles" on profiles;
 drop policy if exists "Own profile update" on profiles;

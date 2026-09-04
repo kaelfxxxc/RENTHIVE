@@ -5,32 +5,42 @@ import { supabase, db } from "../../lib/supabase";
 import { AdminLayout } from "../../components/layout/AdminLayout";
 import { statusBadge } from "../../components/ui/Badge";
 import { Avatar } from "../../components/ui/Avatar";
-
-const revenueData = [
-  { month: "Apr", revenue: 28000, rentals: 32 }, { month: "May", revenue: 43000, rentals: 51 },
-  { month: "Jun", revenue: 38000, rentals: 44 }, { month: "Jul", revenue: 55000, rentals: 67 },
-  { month: "Aug", revenue: 49000, rentals: 58 }, { month: "Sep", revenue: 61000, rentals: 74 },
-];
-
-const userGrowth = [
-  { month: "Apr", renters: 18, lessors: 7 }, { month: "May", renters: 25, lessors: 11 },
-  { month: "Jun", renters: 22, lessors: 9 }, { month: "Jul", renters: 31, lessors: 14 },
-  { month: "Aug", renters: 28, lessors: 12 }, { month: "Sep", renters: 35, lessors: 16 },
-];
-
-const categoryData = [
-  { name: "Electronics", value: 35 }, { name: "Tools", value: 22 },
-  { name: "Cameras", value: 18 }, { name: "Outdoors", value: 15 }, { name: "Other", value: 10 },
-];
+import { CardSkeleton } from "../../components/ui/Skeleton";
+import type { AdminDashboardStats, AdminMonthlyPoint } from "../../types/database";
 
 const PIE_COLORS = ["#D97706", "#0D9488", "#3B82F6", "#8B5CF6", "#6B7280"];
 
-function StatCard({ icon, label, value, change, color }: { icon: React.ReactNode; label: string; value: string; change?: string; color: string }) {
+const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
+
+/**
+ * Month-over-month change. Returns null when there is no prior-month
+ * baseline — we show nothing rather than an invented percentage.
+ */
+function pctChange(current: number, previous: number): number | null {
+  if (!previous) return null;
+  return ((current - previous) / previous) * 100;
+}
+
+function StatCard({ icon, label, value, change, color }: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  change?: number | null;
+  color: string;
+}) {
+  const up = (change ?? 0) >= 0;
   return (
     <div className="bg-white border border-[var(--border)] rounded-2xl p-5">
       <div className="flex items-center justify-between mb-3">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>{icon}</div>
-        {change && <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">{change}</span>}
+        {change !== null && change !== undefined && (
+          <span
+            className={`text-xs font-medium px-2 py-1 rounded-full ${up ? "text-emerald-600 bg-emerald-50" : "text-red-600 bg-red-50"}`}
+            title="Compared with last month"
+          >
+            {up ? "+" : ""}{change.toFixed(0)}%
+          </span>
+        )}
       </div>
       <p className="text-2xl font-bold">{value}</p>
       <p className="text-xs text-[var(--muted-foreground)] mt-0.5">{label}</p>
@@ -38,43 +48,92 @@ function StatCard({ icon, label, value, change, color }: { icon: React.ReactNode
   );
 }
 
+function ChartEmpty({ label }: { label: string }) {
+  return (
+    <div className="h-55 flex items-center justify-center text-center">
+      <p className="text-sm text-[var(--muted-foreground)] max-w-[16rem]">{label}</p>
+    </div>
+  );
+}
+
+interface RecentUser {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  role: string;
+  created_at: string;
+}
+
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState({
-    totalUsers: 0, activeRenters: 0, activeLessors: 0, totalListings: 0,
-    activeRentals: 0, completedRentals: 0, pendingVerifications: 0, openDisputes: 0,
-  });
-  const [recentUsers, setRecentUsers] = useState<{ id: string; full_name: string | null; email: string | null; role: string; created_at: string }[]>([]);
+  const [stats, setStats] = useState<AdminDashboardStats | null>(null);
+  const [series, setSeries] = useState<AdminMonthlyPoint[]>([]);
+  const [categories, setCategories] = useState<{ name: string; value: number }[]>([]);
+  const [recentUsers, setRecentUsers] = useState<RecentUser[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadStats();
+    load();
   }, []);
 
-  const loadStats = async () => {
-    const [usersRes, listingsRes, rentalsRes] = await Promise.all([
-      supabase.from("profiles").select("id, full_name, email, role, verification_status, created_at").order("created_at", { ascending: false }).limit(5),
-      supabase.from("listings").select("id, status"),
-      supabase.from("rental_requests").select("id, status"),
+  const load = async () => {
+    setLoading(true);
+
+    // Every aggregate is computed server-side over the full table. Previously
+    // these were derived from a 5-row page, so each one silently capped at 5.
+    const [statsRes, seriesRes, catRes, usersRes] = await Promise.all([
+      db.rpc("admin_dashboard_stats"),
+      db.rpc("admin_monthly_series", { p_months: 6 }),
+      db.rpc("admin_category_breakdown"),
+      supabase
+        .from("profiles")
+        .select("id, full_name, email, role, created_at")
+        .order("created_at", { ascending: false })
+        .limit(5),
     ]);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const users: any[] = usersRes.data || [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const listings: any[] = listingsRes.data || [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rentals: any[] = rentalsRes.data || [];
+    if (statsRes.data) {
+      const raw = statsRes.data as Record<string, unknown>;
+      // jsonb numerics arrive as strings over the wire.
+      const num = (k: string) => Number(raw[k] ?? 0);
+      setStats({
+        total_users: num("total_users"),
+        renters: num("renters"),
+        lessors: num("lessors"),
+        admins: num("admins"),
+        total_listings: num("total_listings"),
+        published_listings: num("published_listings"),
+        active_rentals: num("active_rentals"),
+        completed_rentals: num("completed_rentals"),
+        pending_verifications: num("pending_verifications"),
+        open_disputes: num("open_disputes"),
+        gross_volume: num("gross_volume"),
+        platform_revenue: num("platform_revenue"),
+        users_this_month: num("users_this_month"),
+        users_prev_month: num("users_prev_month"),
+        rentals_this_month: num("rentals_this_month"),
+        rentals_prev_month: num("rentals_prev_month"),
+        revenue_this_month: num("revenue_this_month"),
+        revenue_prev_month: num("revenue_prev_month"),
+      });
+    }
 
-    setStats({
-      totalUsers: users.length,
-      activeRenters: users.filter((u: { role: string }) => u.role === "renter").length,
-      activeLessors: users.filter((u: { role: string }) => u.role === "lessor").length,
-      totalListings: listings.length,
-      activeRentals: rentals.filter((r: { status: string }) => r.status === "active").length,
-      completedRentals: rentals.filter((r: { status: string }) => r.status === "completed").length,
-      pendingVerifications: users.filter((u: { verification_status: string }) => u.verification_status === "pending" || u.verification_status === "under_review").length,
-      openDisputes: 0,
-    });
-    setRecentUsers(users as typeof recentUsers);
+    setSeries(
+      ((seriesRes.data as AdminMonthlyPoint[]) || []).map(p => ({
+        ...p,
+        gross_volume: Number(p.gross_volume),
+        platform_revenue: Number(p.platform_revenue),
+        rentals: Number(p.rentals),
+        renters: Number(p.renters),
+        lessors: Number(p.lessors),
+      })),
+    );
+    setCategories(((catRes.data as { name: string; value: number }[]) || []).map(c => ({ ...c, value: Number(c.value) })));
+    setRecentUsers((usersRes.data as RecentUser[]) || []);
+    setLoading(false);
   };
+
+  const hasRevenue = series.some(p => p.platform_revenue > 0 || p.rentals > 0);
+  const hasUsers = series.some(p => p.renters > 0 || p.lessors > 0);
 
   return (
     <AdminLayout>
@@ -85,49 +144,74 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Stats grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard icon={<Users className="w-5 h-5 text-blue-600" />} label="Total Users" value={String(stats.totalUsers)} change="+12%" color="bg-blue-50" />
-          <StatCard icon={<Package className="w-5 h-5 text-amber-600" />} label="Active Rentals" value={String(stats.activeRentals)} change="+8%" color="bg-amber-50" />
-          <StatCard icon={<DollarSign className="w-5 h-5 text-emerald-600" />} label="Platform Revenue" value="₱61,000" change="+24%" color="bg-emerald-50" />
-          <StatCard icon={<FileText className="w-5 h-5 text-indigo-600" />} label="Total Listings" value={String(stats.totalListings)} color="bg-indigo-50" />
-          <StatCard icon={<ShieldCheck className="w-5 h-5 text-teal-600" />} label="Pending Verifications" value={String(stats.pendingVerifications)} color="bg-teal-50" />
-          <StatCard icon={<AlertTriangle className="w-5 h-5 text-red-600" />} label="Open Disputes" value={String(stats.openDisputes)} color="bg-red-50" />
-          <StatCard icon={<TrendingUp className="w-5 h-5 text-purple-600" />} label="Completed Rentals" value={String(stats.completedRentals)} color="bg-purple-50" />
-          <StatCard icon={<Activity className="w-5 h-5 text-pink-600" />} label="Active Lessors" value={String(stats.activeLessors)} color="bg-pink-50" />
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i} />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard icon={<Users className="w-5 h-5 text-blue-600" />} label="Total Users"
+              value={String(stats?.total_users ?? 0)} color="bg-blue-50"
+              change={pctChange(stats?.users_this_month ?? 0, stats?.users_prev_month ?? 0)} />
+            <StatCard icon={<Package className="w-5 h-5 text-amber-600" />} label="Active Rentals"
+              value={String(stats?.active_rentals ?? 0)} color="bg-amber-50"
+              change={pctChange(stats?.rentals_this_month ?? 0, stats?.rentals_prev_month ?? 0)} />
+            <StatCard icon={<DollarSign className="w-5 h-5 text-emerald-600" />} label="Platform Revenue"
+              value={peso(stats?.platform_revenue ?? 0)} color="bg-emerald-50"
+              change={pctChange(stats?.revenue_this_month ?? 0, stats?.revenue_prev_month ?? 0)} />
+            <StatCard icon={<FileText className="w-5 h-5 text-indigo-600" />} label="Total Listings"
+              value={String(stats?.total_listings ?? 0)} color="bg-indigo-50" />
+            <StatCard icon={<ShieldCheck className="w-5 h-5 text-teal-600" />} label="Pending Verifications"
+              value={String(stats?.pending_verifications ?? 0)} color="bg-teal-50" />
+            <StatCard icon={<AlertTriangle className="w-5 h-5 text-red-600" />} label="Open Disputes"
+              value={String(stats?.open_disputes ?? 0)} color="bg-red-50" />
+            <StatCard icon={<TrendingUp className="w-5 h-5 text-purple-600" />} label="Completed Rentals"
+              value={String(stats?.completed_rentals ?? 0)} color="bg-purple-50" />
+            <StatCard icon={<Activity className="w-5 h-5 text-pink-600" />} label="Active Lessors"
+              value={String(stats?.lessors ?? 0)} color="bg-pink-50" />
+          </div>
+        )}
 
         {/* Charts row 1 */}
         <div className="grid lg:grid-cols-3 gap-5">
           <div className="lg:col-span-2 bg-white border border-[var(--border)] rounded-2xl p-5">
-            <h2 className="font-semibold mb-4">Platform Revenue & Rentals</h2>
-            <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={revenueData}>
-                <defs>
-                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#D97706" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#D97706" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₱${v / 1000}k`} />
-                <Tooltip formatter={(v, n) => [n === "revenue" ? `₱${Number(v).toLocaleString()}` : v, n === "revenue" ? "Revenue" : "Rentals"]} />
-                <Area type="monotone" dataKey="revenue" stroke="#D97706" strokeWidth={2} fill="url(#revGrad)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            <h2 className="font-semibold mb-4">Platform Revenue &amp; Rentals</h2>
+            {!loading && !hasRevenue ? (
+              <ChartEmpty label="No completed rentals yet. Revenue will appear here once transactions are completed." />
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={series}>
+                  <defs>
+                    <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#D97706" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#D97706" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₱${v / 1000}k`} />
+                  <Tooltip formatter={(v, n) => [n === "platform_revenue" ? peso(Number(v)) : v, n === "platform_revenue" ? "Revenue" : "Rentals"]} />
+                  <Area type="monotone" dataKey="platform_revenue" stroke="#D97706" strokeWidth={2} fill="url(#revGrad)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
 
           <div className="bg-white border border-[var(--border)] rounded-2xl p-5">
             <h2 className="font-semibold mb-4">Top Categories</h2>
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie data={categoryData} cx="50%" cy="50%" outerRadius={80} dataKey="value" // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            {!loading && categories.length === 0 ? (
+              <ChartEmpty label="No published listings yet." />
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie data={categories} cx="50%" cy="50%" outerRadius={80} dataKey="value" // eslint-disable-next-line @typescript-eslint/no-explicit-any
 label={(props: any) => `${props.name} ${((props.percent || 0) * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
-                  {categoryData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+                    {categories.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -135,17 +219,21 @@ label={(props: any) => `${props.name} ${((props.percent || 0) * 100).toFixed(0)}
         <div className="grid lg:grid-cols-2 gap-5">
           <div className="bg-white border border-[var(--border)] rounded-2xl p-5">
             <h2 className="font-semibold mb-4">User Registration Growth</h2>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={userGrowth} barSize={12}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip />
-                <Legend iconType="circle" iconSize={8} />
-                <Bar dataKey="renters" fill="#D97706" radius={[4, 4, 0, 0]} name="Renters" />
-                <Bar dataKey="lessors" fill="#0D9488" radius={[4, 4, 0, 0]} name="Lessors" />
-              </BarChart>
-            </ResponsiveContainer>
+            {!loading && !hasUsers ? (
+              <ChartEmpty label="No registrations in the last 6 months." />
+            ) : (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={series} barSize={12}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip />
+                  <Legend iconType="circle" iconSize={8} />
+                  <Bar dataKey="renters" fill="#D97706" radius={[4, 4, 0, 0]} name="Renters" />
+                  <Bar dataKey="lessors" fill="#0D9488" radius={[4, 4, 0, 0]} name="Lessors" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
 
           <div className="bg-white border border-[var(--border)] rounded-2xl p-5">

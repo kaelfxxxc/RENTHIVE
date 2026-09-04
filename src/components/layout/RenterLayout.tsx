@@ -2,16 +2,27 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, Search, Package, Bell, MessageSquare, User, LogOut, Hexagon, Menu, X, ChevronDown } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useUnreadCounts } from "../../hooks/useUnreadCounts";
 import { Avatar } from "../ui/Avatar";
 
 interface NavItem { label: string; icon: ReactNode; path: string; badge?: number; }
 
 interface RenterLayoutProps { children: ReactNode; }
 
+/** Unread pill, capped at 99+ so a large count can't blow out the layout. */
+function Badge({ count }: { count: number }) {
+  return (
+    <span className="min-w-4.5 h-4.5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
 export function RenterLayout({ children }: RenterLayoutProps) {
   const { profile, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { notifications: unreadNotifications, messages: unreadMessages } = useUnreadCounts();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
@@ -19,8 +30,8 @@ export function RenterLayout({ children }: RenterLayoutProps) {
     { label: "Home", icon: <Home className="w-5 h-5" />, path: "/renter/home" },
     { label: "Search", icon: <Search className="w-5 h-5" />, path: "/renter/search" },
     { label: "My Rentals", icon: <Package className="w-5 h-5" />, path: "/renter/rentals" },
-    { label: "Messages", icon: <MessageSquare className="w-5 h-5" />, path: "/renter/messages" },
-    { label: "Notifications", icon: <Bell className="w-5 h-5" />, path: "/renter/notifications" },
+    { label: "Messages", icon: <MessageSquare className="w-5 h-5" />, path: "/renter/messages", badge: unreadMessages },
+    { label: "Notifications", icon: <Bell className="w-5 h-5" />, path: "/renter/notifications", badge: unreadNotifications },
   ];
 
   const handleSignOut = async () => { await signOut(); navigate("/login"); };

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, MapPin, ChevronRight, Loader2 } from "lucide-react";
-import { supabase } from "../../lib/supabase";
+import { supabase, db } from "../../lib/supabase";
 import { RenterLayout } from "../../components/layout/RenterLayout";
 import { ProductCard } from "../../components/shared/ProductCard";
 import { Button } from "../../components/ui/Button";
@@ -9,29 +9,37 @@ import { CardSkeleton } from "../../components/ui/Skeleton";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { useAuth } from "../../contexts/AuthContext";
 import type { Listing } from "../../types";
+import type { PublicCategoryCount } from "../../types/database";
 
-const categories = [
-  { name: "Electronics", emoji: "💻", slug: "electronics" },
-  { name: "Tools", emoji: "🔧", slug: "tools" },
-  { name: "Outdoors", emoji: "🏕️", slug: "outdoors" },
-  { name: "Cameras", emoji: "📷", slug: "cameras" },
-  { name: "Audio", emoji: "🎸", slug: "audio" },
-  { name: "Vehicles", emoji: "🚗", slug: "vehicles" },
-  { name: "Furniture", emoji: "🪑", slug: "furniture" },
-  { name: "Party", emoji: "🎉", slug: "party" },
-];
+/** Fallback glyph when a category row has no icon set. */
+const FALLBACK_ICON = "📦";
 
 export default function RenterHomePage() {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [listings, setListings] = useState<Listing[]>([]);
+  const [categories, setCategories] = useState<PublicCategoryCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadListings();
+    loadCategories();
   }, []);
+
+  // Real rows from the `categories` table, with their own icons, instead of a
+  // hardcoded list whose slugs may not exist in the database at all.
+  const loadCategories = async () => {
+    const { data } = await db.rpc("public_category_counts");
+    if (!data) return;
+    setCategories(
+      (data as PublicCategoryCount[]).map(c => ({
+        ...c,
+        listing_count: Number(c.listing_count ?? 0),
+      })),
+    );
+  };
 
   const loadListings = async () => {
     setLoading(true);
@@ -88,21 +96,24 @@ export default function RenterHomePage() {
         </div>
 
         {/* Categories */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-lg">Browse Categories</h2>
-            <Link to="/renter/search" className="text-sm text-[var(--primary)] flex items-center gap-1 hover:underline">View all <ChevronRight className="w-4 h-4" /></Link>
+        {categories.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-bold text-lg">Browse Categories</h2>
+              <Link to="/renter/search" className="text-sm text-[var(--primary)] flex items-center gap-1 hover:underline">View all <ChevronRight className="w-4 h-4" /></Link>
+            </div>
+            <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
+              {categories.map(cat => (
+                <Link key={cat.id} to={`/renter/search?category=${cat.slug}`}
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-[var(--border)] bg-white hover:border-amber-300 hover:bg-amber-50 transition-all text-center">
+                  <span className="text-2xl">{cat.icon || FALLBACK_ICON}</span>
+                  <span className="text-xs font-medium text-[var(--foreground)]">{cat.name}</span>
+                  <span className="text-xs text-[var(--muted-foreground)]">{cat.listing_count}</span>
+                </Link>
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
-            {categories.map(cat => (
-              <Link key={cat.slug} to={`/renter/search?category=${cat.slug}`}
-                className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-[var(--border)] bg-white hover:border-amber-300 hover:bg-amber-50 transition-all text-center">
-                <span className="text-2xl">{cat.emoji}</span>
-                <span className="text-xs font-medium text-[var(--foreground)]">{cat.name}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
+        )}
 
         {/* Featured listings */}
         <div>

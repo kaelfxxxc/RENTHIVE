@@ -9,9 +9,29 @@ import { Modal } from "../../components/ui/Modal";
 import { TransactionTimeline } from "../../components/ui/TransactionTimeline";
 import { useToast } from "../../components/ui/Toast";
 import { useAuth } from "../../contexts/AuthContext";
+import { usePlatformSettings } from "../../contexts/SettingsContext";
 import type { RentalRequest, Payment } from "../../types";
 
 const TEST_MODE = !import.meta.env.VITE_PAYMENT_LIVE;
+
+/**
+ * Splits a rental into its two payable instalments using the reservation
+ * percentage configured in `platform_settings`.
+ *
+ * The balance is derived by subtracting the reservation from the rental fee
+ * rather than applying the inverse percentage, so the two instalments always
+ * sum to exactly the rental fee with no rounding gap.
+ */
+function splitFees(rental: RentalRequest, reservationRate: number) {
+  const reservation = Math.round(rental.rental_fee * reservationRate);
+  const balance = Math.round(
+    rental.security_deposit
+    + (rental.rental_fee - reservation)
+    + (rental.incidental_fee || 0)
+    + (rental.delivery_fee || 0),
+  );
+  return { reservation, balance };
+}
 
 function buildTimeline(rental: RentalRequest, payments: Payment[]) {
   const paid = (type: string) => payments.some(p => p.payment_type === type && p.status === "paid");
@@ -41,6 +61,7 @@ export default function RentalDetailPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { success, error: toastError } = useToast();
+  const { reservationFeeRate } = usePlatformSettings();
   const [rental, setRental] = useState<RentalRequest | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,9 +95,8 @@ export default function RentalDetailPage() {
     // TEST MODE: simulate payment
     await new Promise(r => setTimeout(r, 1200));
 
-    const amount = payModal === "reservation_fee"
-      ? Math.round(rental.rental_fee * 0.1)
-      : rental.security_deposit + rental.rental_fee * 0.9 + (rental.incidental_fee || 0) + (rental.delivery_fee || 0);
+    const split = splitFees(rental, reservationFeeRate);
+    const amount = payModal === "reservation_fee" ? split.reservation : split.balance;
 
     const { error } = await db.from("payments").insert({
       rental_request_id: rental.id,
@@ -144,6 +164,7 @@ export default function RentalDetailPage() {
   const canPayBalance = reservationPaid && !fullyPaid && rental.status === "payment_pending";
 
   const timeline = buildTimeline(rental, payments);
+  const split = splitFees(rental, reservationFeeRate);
 
   return (
     <RenterLayout>
@@ -243,12 +264,12 @@ export default function RentalDetailPage() {
                 </p>
                 {canPayReservation && (
                   <Button onClick={() => setPayModal("reservation_fee")} icon={<CreditCard className="w-4 h-4" />} className="w-full mb-2">
-                    Pay Reservation Fee — ₱{Math.round(rental.rental_fee * 0.1).toLocaleString()} (TEST)
+                    Pay Reservation Fee — ₱{split.reservation.toLocaleString()} (TEST)
                   </Button>
                 )}
                 {canPayBalance && (
                   <Button onClick={() => setPayModal("deposit")} icon={<CreditCard className="w-4 h-4" />} className="w-full">
-                    Pay Balance + Deposit — ₱{(rental.security_deposit + rental.rental_fee * 0.9 + (rental.incidental_fee || 0)).toLocaleString()} (TEST)
+                    Pay Balance + Deposit — ₱{split.balance.toLocaleString()} (TEST)
                   </Button>
                 )}
               </div>
@@ -317,9 +338,7 @@ export default function RentalDetailPage() {
           <p className="text-sm text-[var(--muted-foreground)]">
             You are about to pay{" "}
             <strong>
-              ₱{payModal === "reservation_fee"
-                ? Math.round(rental.rental_fee * 0.1).toLocaleString()
-                : (rental.security_deposit + rental.rental_fee * 0.9 + (rental.incidental_fee || 0)).toLocaleString()}
+              ₱{(payModal === "reservation_fee" ? split.reservation : split.balance).toLocaleString()}
             </strong>{" "}
             for {payModal === "reservation_fee" ? "the reservation fee" : "the balance and deposit"}.
           </p>
