@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Hexagon, ShieldCheck, Star, ArrowRight, CheckCircle2, Camera, Package, Clock, Wallet, MessageSquare, ChevronDown, ChevronUp, Search } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../components/ui/Button";
+import { Modal } from "../components/ui/Modal";
 
 const categories = [
   { name: "Electronics", icon: "💻", count: 245, slug: "electronics" },
@@ -267,34 +268,28 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      {showAuthChoice && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={() => setShowAuthChoice(false)}>
-          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0F172A] p-6 text-white shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="mb-5 text-center">
-              <p className="text-xs uppercase tracking-[0.3em] text-amber-400/80">Get Started</p>
-              <h2 className="mt-2 text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>Choose your account type</h2>
-              <p className="mt-2 text-sm text-white/60">Pick the sign-in path that matches how you use RentHive.</p>
-            </div>
+      <Modal open={showAuthChoice} onClose={() => setShowAuthChoice(false)} title="Choose your account type" size="sm">
+        <div className="space-y-5">
+          <p className="text-sm text-[var(--muted-foreground)]">
+            Pick the sign-in path that matches how you use RentHive.
+          </p>
 
-            <div className="space-y-3">
-              <Link to="/login?role=renter" onClick={() => setShowAuthChoice(false)}>
-                <Button size="lg" className="w-full bg-amber-500 hover:bg-amber-600 text-white">Renter Sign In</Button>
-              </Link>
-              <Link to="/login?role=lessor" onClick={() => setShowAuthChoice(false)}>
-                <Button size="lg" className="w-full bg-orange-500 hover:bg-orange-600 text-white">Lessor Sign In</Button>
-              </Link>
-            </div>
-
-            <button
-              type="button"
-              className="mt-5 w-full text-sm text-white/50 hover:text-white transition-colors"
-              onClick={() => setShowAuthChoice(false)}
-            >
-              Cancel
-            </button>
+          <div className="space-y-3">
+            <Link to="/login?role=renter" onClick={() => setShowAuthChoice(false)} className="block">
+              <Button size="lg" className="w-full">Renter Sign In</Button>
+            </Link>
+            <Link to="/login?role=lessor" onClick={() => setShowAuthChoice(false)} className="block">
+              <Button size="lg" variant="outline" className="w-full border-amber-200 text-[var(--foreground)] hover:bg-amber-50">
+                Lessor Sign In
+              </Button>
+            </Link>
           </div>
+
+          <p className="text-xs text-[var(--muted-foreground)] text-center">
+            You can switch account paths later from the login page.
+          </p>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }
