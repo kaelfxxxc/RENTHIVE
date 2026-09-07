@@ -91,6 +91,8 @@ export default function ListingDetailPage() {
 
   const days = totalDays();
   const total = days * listing.price_per_day + listing.security_deposit + (listing.incidental_fee || 0);
+  // Bound once so the lessor block can read fields without re-narrowing.
+  const lessor = listing.lessor;
 
   return (
     <RenterLayout>
@@ -168,24 +170,24 @@ export default function ListingDetailPage() {
             </div>
 
             {/* Lessor */}
-            {listing.lessor && (
+            {lessor && (
               <div className="border border-[var(--border)] rounded-xl p-4">
                 <h3 className="font-semibold mb-3">Lessor</h3>
                 <div className="flex items-center gap-3">
-                  <Avatar src={listing.lessor.avatar_url} name={listing.lessor.full_name} size="lg" />
+                  <Avatar src={lessor.avatar_url} name={lessor.full_name} size="lg" />
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <p className="font-semibold">{listing.lessor.full_name}</p>
-                      {listing.lessor.verification_status === "verified" && (
+                      <p className="font-semibold">{lessor.full_name}</p>
+                      {lessor.verification_status === "verified" && (
                         <ShieldCheck className="w-4 h-4 text-teal-500" />
                       )}
                     </div>
                     <p className="text-xs text-[var(--muted-foreground)]">
-                      Member since {new Date(listing.lessor.created_at).getFullYear()}
+                      Member since {new Date(lessor.created_at).getFullYear()}
                     </p>
                   </div>
                   <Button variant="outline" size="sm" icon={<MessageSquare className="w-4 h-4" />} className="ml-auto"
-                    onClick={() => navigate(`/renter/messages?with=${listing.lessor.id}`)}>
+                    onClick={() => navigate(`/renter/messages?with=${lessor.id}`)}>
                     Message
                   </Button>
                 </div>
