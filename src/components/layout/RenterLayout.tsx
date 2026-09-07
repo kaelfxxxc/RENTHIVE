@@ -3,20 +3,12 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, Search, Package, Bell, MessageSquare, User, LogOut, Hexagon, Menu, X, ChevronDown } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useUnreadCounts } from "../../hooks/useUnreadCounts";
+import { NavBadge } from "./NavBadge";
 import { Avatar } from "../ui/Avatar";
 
 interface NavItem { label: string; icon: ReactNode; path: string; badge?: number; }
 
 interface RenterLayoutProps { children: ReactNode; }
-
-/** Unread pill, capped at 99+ so a large count can't blow out the layout. */
-function Badge({ count }: { count: number }) {
-  return (
-    <span className="min-w-4.5 h-4.5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
-      {count > 99 ? "99+" : count}
-    </span>
-  );
-}
 
 export function RenterLayout({ children }: RenterLayoutProps) {
   const { profile, signOut } = useAuth();
@@ -36,6 +28,7 @@ export function RenterLayout({ children }: RenterLayoutProps) {
 
   const handleSignOut = async () => { await signOut(); navigate("/login"); };
   const isActive = (path: string) => location.pathname.startsWith(path);
+  const totalUnread = unreadNotifications + unreadMessages;
 
   return (
     <div className="min-h-screen bg-[var(--muted)]">
@@ -53,6 +46,7 @@ export function RenterLayout({ children }: RenterLayoutProps) {
                 className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${isActive(item.path) ? "bg-amber-50 text-[var(--primary)]" : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]"}`}>
                 {item.icon}
                 <span>{item.label}</span>
+                {!!item.badge && <NavBadge count={item.badge} />}
               </Link>
             ))}
           </nav>
@@ -84,8 +78,11 @@ export function RenterLayout({ children }: RenterLayoutProps) {
             <Hexagon className="w-6 h-6 text-[var(--primary)] fill-amber-100" />
             <span className="font-bold text-base" style={{ fontFamily: "var(--font-display)" }}>RentHive</span>
           </Link>
-          <button onClick={() => setMenuOpen(!menuOpen)} className="p-2">
+          <button onClick={() => setMenuOpen(!menuOpen)} className="relative p-2">
             {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {!menuOpen && totalUnread > 0 && (
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500" />
+            )}
           </button>
         </div>
         {menuOpen && (
@@ -94,6 +91,7 @@ export function RenterLayout({ children }: RenterLayoutProps) {
               <Link key={item.path} to={item.path} onClick={() => setMenuOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ${isActive(item.path) ? "bg-amber-50 text-[var(--primary)]" : "text-[var(--foreground)]"}`}>
                 {item.icon}{item.label}
+                {!!item.badge && <span className="ml-auto"><NavBadge count={item.badge} /></span>}
               </Link>
             ))}
             <hr className="border-[var(--border)]" />
@@ -110,9 +108,12 @@ export function RenterLayout({ children }: RenterLayoutProps) {
         <div className="grid grid-cols-5 h-16">
           {navItems.map(item => (
             <Link key={item.path} to={item.path}
-              className={`flex flex-col items-center justify-center gap-1 text-xs transition-colors ${isActive(item.path) ? "text-[var(--primary)]" : "text-[var(--muted-foreground)]"}`}>
+              className={`relative flex flex-col items-center justify-center gap-1 text-xs transition-colors ${isActive(item.path) ? "text-[var(--primary)]" : "text-[var(--muted-foreground)]"}`}>
               {item.icon}
               <span>{item.label}</span>
+              {!!item.badge && (
+                <span className="absolute top-2 right-1/4 translate-x-1/2"><NavBadge count={item.badge} /></span>
+              )}
             </Link>
           ))}
         </div>

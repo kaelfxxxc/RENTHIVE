@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Search, ShieldCheck, ShieldX, UserX, UserCheck } from "lucide-react";
 import { supabase, db } from "../../lib/supabase";
 import { AdminLayout } from "../../components/layout/AdminLayout";
@@ -12,21 +13,38 @@ import type { Profile } from "../../types";
 
 export default function AdminUsersPage() {
   const { success, error: toastError } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  // Seeded from ?q= so the admin header search lands on a filtered list.
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const [roleFilter, setRoleFilter] = useState("");
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => { load(); }, []);
 
+  // Follow later ?q= changes (e.g. a second search from the header while
+  // already on this page).
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q !== null) setSearch(q);
+  }, [searchParams]);
+
   const load = async () => {
     setLoading(true);
-    let q = supabase.from("profiles").select("*").order("created_at", { ascending: false });
-    const { data } = await q;
+    const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
     setUsers((data as Profile[]) || []);
     setLoading(false);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    // Keep the URL honest without stacking history entries per keystroke.
+    const next = new URLSearchParams(searchParams);
+    if (value) next.set("q", value);
+    else next.delete("q");
+    setSearchParams(next, { replace: true });
   };
 
   const filtered = users.filter(u => {
@@ -70,7 +88,7 @@ export default function AdminUsersPage() {
         <div className="flex gap-3">
           <div className="flex-1 flex items-center gap-2 bg-white border border-[var(--border)] rounded-xl px-4 py-2.5">
             <Search className="w-4 h-4 text-[var(--muted-foreground)]" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or email…" className="flex-1 bg-transparent text-sm outline-none" />
+            <input value={search} onChange={e => handleSearchChange(e.target.value)} placeholder="Search by name or email…" className="flex-1 bg-transparent text-sm outline-none" />
           </div>
           <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="border border-[var(--border)] bg-white rounded-xl px-3 py-2 text-sm outline-none">
             <option value="">All Roles</option>

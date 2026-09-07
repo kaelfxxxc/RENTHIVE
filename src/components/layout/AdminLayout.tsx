@@ -2,6 +2,7 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Users, ShieldCheck, ListPlus, Package, CreditCard, AlertTriangle, Star, BarChart2, Settings, FileText, LogOut, Hexagon, Menu, Bell, Search, ChevronLeft } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useUnreadCounts } from "../../hooks/useUnreadCounts";
 import { Avatar } from "../ui/Avatar";
 
 interface AdminLayoutProps { children: ReactNode; }
@@ -10,8 +11,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const { profile, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { notifications: unreadNotifications } = useUnreadCounts();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   const navSections = [
     {
@@ -49,6 +52,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const handleSignOut = async () => { await signOut(); navigate("/login"); };
   const isActive = (path: string) => location.pathname.startsWith(path);
+
+  // The header search used to be an input with no state and no handler.
+  // Users is the only admin table with a text filter, so send it there.
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = search.trim();
+    if (!q) return;
+    navigate(`/admin/users?q=${encodeURIComponent(q)}`);
+  };
 
   const SidebarContent = ({ mobile = false }: { mobile?: boolean }) => (
     <aside className={`${mobile ? "w-64" : collapsed ? "w-16" : "w-56"} flex flex-col bg-[#0F172A] text-white h-full transition-all duration-200`}>
@@ -122,14 +134,26 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="sticky top-0 z-30 bg-white border-b border-[var(--border)] h-14 flex items-center px-4 gap-3">
           <button onClick={() => setMobileOpen(true)} className="md:hidden p-1"><Menu className="w-5 h-5" /></button>
-          <div className="flex-1 hidden md:flex items-center gap-2 max-w-md bg-[var(--muted)] rounded-xl px-3 py-2">
+          <form onSubmit={handleSearch} className="flex-1 hidden md:flex items-center gap-2 max-w-md bg-[var(--muted)] rounded-xl px-3 py-2">
             <Search className="w-4 h-4 text-[var(--muted-foreground)]" />
-            <input placeholder="Search users, listings, rentals..." className="flex-1 bg-transparent text-sm outline-none text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]" />
-          </div>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search users by name or email..."
+              aria-label="Search users"
+              className="flex-1 bg-transparent text-sm outline-none text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]"
+            />
+          </form>
           <div className="flex-1 md:hidden" />
-          <button className="relative p-2 hover:bg-[var(--muted)] rounded-xl">
+          <Link to="/admin/notifications" aria-label={`Notifications${unreadNotifications > 0 ? ` (${unreadNotifications} unread)` : ""}`}
+            className="relative p-2 hover:bg-[var(--muted)] rounded-xl">
             <Bell className="w-5 h-5 text-[var(--muted-foreground)]" />
-          </button>
+            {unreadNotifications > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-4.5 h-4.5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                {unreadNotifications > 99 ? "99+" : unreadNotifications}
+              </span>
+            )}
+          </Link>
           <Avatar src={profile?.avatar_url} name={profile?.full_name} size="sm" />
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>

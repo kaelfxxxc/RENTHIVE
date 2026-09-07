@@ -2,7 +2,11 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, ListPlus, FileText, Package, Calendar, DollarSign, MessageSquare, Star, Bell, User, Settings, LogOut, Hexagon, Menu, X, ChevronLeft } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useUnreadCounts } from "../../hooks/useUnreadCounts";
+import { NavBadge, NavDot } from "./NavBadge";
 import { Avatar } from "../ui/Avatar";
+
+interface NavItem { label: string; icon: ReactNode; path: string; badge?: number; }
 
 interface LessorLayoutProps { children: ReactNode; }
 
@@ -10,19 +14,20 @@ export function LessorLayout({ children }: LessorLayoutProps) {
   const { profile, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { notifications: unreadNotifications, messages: unreadMessages } = useUnreadCounts();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" />, path: "/lessor/dashboard" },
     { label: "Listings", icon: <ListPlus className="w-5 h-5" />, path: "/lessor/listings" },
     { label: "Requests", icon: <FileText className="w-5 h-5" />, path: "/lessor/requests" },
     { label: "Rentals", icon: <Package className="w-5 h-5" />, path: "/lessor/rentals" },
     { label: "Calendar", icon: <Calendar className="w-5 h-5" />, path: "/lessor/calendar" },
     { label: "Earnings", icon: <DollarSign className="w-5 h-5" />, path: "/lessor/earnings" },
-    { label: "Messages", icon: <MessageSquare className="w-5 h-5" />, path: "/lessor/messages" },
+    { label: "Messages", icon: <MessageSquare className="w-5 h-5" />, path: "/lessor/messages", badge: unreadMessages },
     { label: "Reviews", icon: <Star className="w-5 h-5" />, path: "/lessor/reviews" },
-    { label: "Notifications", icon: <Bell className="w-5 h-5" />, path: "/lessor/notifications" },
+    { label: "Notifications", icon: <Bell className="w-5 h-5" />, path: "/lessor/notifications", badge: unreadNotifications },
   ];
 
   const bottomItems = [
@@ -32,6 +37,7 @@ export function LessorLayout({ children }: LessorLayoutProps) {
 
   const handleSignOut = async () => { await signOut(); navigate("/login"); };
   const isActive = (path: string) => location.pathname.startsWith(path);
+  const totalUnread = unreadNotifications + unreadMessages;
 
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
     <aside className={`${mobile ? "w-64" : collapsed ? "w-16" : "w-60"} flex flex-col bg-[#0F172A] text-white transition-all duration-200 shrink-0`}>
@@ -49,10 +55,17 @@ export function LessorLayout({ children }: LessorLayoutProps) {
       <nav className="flex-1 py-4 overflow-y-auto">
         {navItems.map(item => (
           <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)}
-            className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${isActive(item.path) ? "bg-amber-500/20 text-amber-400 border-r-2 border-amber-400" : "text-white/60 hover:bg-white/5 hover:text-white"} ${collapsed && !mobile ? "justify-center px-2" : ""}`}
+            className={`relative flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${isActive(item.path) ? "bg-amber-500/20 text-amber-400 border-r-2 border-amber-400" : "text-white/60 hover:bg-white/5 hover:text-white"} ${collapsed && !mobile ? "justify-center px-2" : ""}`}
             title={collapsed && !mobile ? item.label : undefined}>
             {item.icon}
-            {(!collapsed || mobile) && <span>{item.label}</span>}
+            {(!collapsed || mobile) ? (
+              <>
+                <span>{item.label}</span>
+                {!!item.badge && <span className="ml-auto"><NavBadge count={item.badge} /></span>}
+              </>
+            ) : (
+              <NavDot show={!!item.badge} />
+            )}
           </Link>
         ))}
       </nav>
@@ -108,7 +121,10 @@ export function LessorLayout({ children }: LessorLayoutProps) {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile header */}
         <header className="md:hidden sticky top-0 z-30 bg-white border-b border-[var(--border)] h-14 flex items-center px-4 gap-3">
-          <button onClick={() => setMobileOpen(true)} className="p-1"><Menu className="w-5 h-5" /></button>
+          <button onClick={() => setMobileOpen(true)} className="relative p-1">
+            <Menu className="w-5 h-5" />
+            <NavDot show={totalUnread > 0} />
+          </button>
           <Hexagon className="w-6 h-6 text-[var(--primary)] fill-amber-100" />
           <span className="font-bold" style={{ fontFamily: "var(--font-display)" }}>RentHive</span>
         </header>
