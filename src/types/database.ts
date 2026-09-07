@@ -47,6 +47,7 @@ export type Database = {
           verification_status?: "not_started" | "pending" | "under_review" | "verified" | "rejected" | "resubmission_required";
           is_active?: boolean;
         };
+        Relationships: [];
       };
       categories: {
         Row: {
@@ -70,6 +71,7 @@ export type Database = {
           icon?: string | null;
           description?: string | null;
         };
+        Relationships: [];
       };
       listings: {
         Row: {
@@ -130,6 +132,7 @@ export type Database = {
           status?: "draft" | "pending_review" | "published" | "unpublished" | "rejected" | "suspended";
           primary_image_url?: string | null;
         };
+        Relationships: [];
       };
       rental_requests: {
         Row: {
@@ -170,6 +173,7 @@ export type Database = {
         Update: AnyRecord & {
           status?: "draft" | "pending" | "accepted" | "declined" | "cancelled" | "payment_pending" | "confirmed" | "active" | "returned" | "completed" | "disputed";
         };
+        Relationships: [];
       };
       payments: {
         Row: {
@@ -199,6 +203,7 @@ export type Database = {
           status?: "pending" | "processing" | "paid" | "failed" | "cancelled" | "refunded" | "held" | "released" | "disputed";
           notes?: string | null;
         };
+        Relationships: [];
       };
       disputes: {
         Row: {
@@ -229,6 +234,7 @@ export type Database = {
           resolution_amount?: number | null;
           resolved_at?: string | null;
         };
+        Relationships: [];
       };
       messages: {
         Row: {
@@ -248,6 +254,7 @@ export type Database = {
         Update: AnyRecord & {
           is_read?: boolean;
         };
+        Relationships: [];
       };
       conversations: {
         Row: {
@@ -266,6 +273,7 @@ export type Database = {
         Update: AnyRecord & {
           last_message_at?: string | null;
         };
+        Relationships: [];
       };
       notifications: {
         Row: {
@@ -289,6 +297,7 @@ export type Database = {
         Update: AnyRecord & {
           is_read?: boolean;
         };
+        Relationships: [];
       };
       reviews: {
         Row: {
@@ -320,6 +329,7 @@ export type Database = {
         Update: AnyRecord & {
           comment?: string | null;
         };
+        Relationships: [];
       };
       identity_verifications: {
         Row: {
@@ -351,6 +361,7 @@ export type Database = {
           admin_notes?: string | null;
           reviewed_at?: string | null;
         };
+        Relationships: [];
       };
       audit_logs: {
         Row: {
@@ -370,6 +381,7 @@ export type Database = {
           changes?: Record<string, unknown> | null;
         };
         Update: AnyRecord;
+        Relationships: [];
       };
       platform_settings: {
         Row: {
@@ -405,6 +417,7 @@ export type Database = {
           allow_guest_browse?: boolean;
           updated_by?: string | null;
         };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

@@ -7,7 +7,7 @@ import { ProductCard } from "../../components/shared/ProductCard";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { Button } from "../../components/ui/Button";
-import type { Listing } from "../../types";
+import type { Listing, ProductCondition } from "../../types";
 
 const sortOptions = [
   { value: "newest", label: "Newest" },
@@ -16,7 +16,7 @@ const sortOptions = [
   { value: "rating", label: "Highest Rated" },
 ];
 
-const conditionOptions = [
+const conditionOptions: { value: ProductCondition | ""; label: string }[] = [
   { value: "", label: "Any Condition" },
   { value: "new", label: "New" },
   { value: "like_new", label: "Like New" },
@@ -30,7 +30,7 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState(searchParams.get("q") || "");
   const [sort, setSort] = useState("newest");
-  const [condition, setCondition] = useState("");
+  const [condition, setCondition] = useState<ProductCondition | "">("");
   const [maxPrice, setMaxPrice] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -93,7 +93,7 @@ export default function SearchPage() {
           <div className="bg-white border border-[var(--border)] rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <label className="text-xs font-medium text-[var(--muted-foreground)] mb-1.5 block">Condition</label>
-              <select value={condition} onChange={e => setCondition(e.target.value)} className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm outline-none">
+              <select value={condition} onChange={e => setCondition(e.target.value as ProductCondition | "")} className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm outline-none">
                 {conditionOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>

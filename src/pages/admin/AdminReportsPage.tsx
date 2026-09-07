@@ -147,7 +147,7 @@ export default function AdminReportsPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip formatter={(v: number) => [peso(v), "Revenue"]} />
+                    <Tooltip formatter={v => [peso(Number(v ?? 0)), "Revenue"]} />
                     <Area type="monotone" dataKey="platform_revenue" stroke="#D97706" fill="url(#revGrad)" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>

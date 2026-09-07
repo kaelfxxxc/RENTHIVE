@@ -91,6 +91,21 @@ export default function CreateListingPage() {
         </button>
         <h1 className="text-2xl font-bold mb-6" style={{ fontFamily: "var(--font-display)" }}>Create New Listing</h1>
 
+        {verificationRequired && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 mb-5">
+            <ShieldAlert className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+            <div className="text-sm text-amber-800">
+              <p className="font-semibold">Identity verification required</p>
+              <p className="text-xs mt-0.5 leading-relaxed">
+                You can save this listing as a draft now, but submitting it for review needs a verified identity.{" "}
+                <button type="button" onClick={() => navigate("/verify-identity")} className="underline font-medium">
+                  Verify now
+                </button>
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-5">
           {/* Basic info */}
           <div className="bg-white border border-[var(--border)] rounded-xl p-5 space-y-4">
@@ -184,7 +199,9 @@ export default function CreateListingPage() {
             <Button variant="outline" className="flex-1" onClick={e => handleSubmit(e as FormEvent, "draft")} disabled={saving}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save as Draft"}
             </Button>
-            <Button className="flex-1" onClick={e => handleSubmit(e as FormEvent, "pending_review")} loading={saving}>
+            <Button className="flex-1" onClick={e => handleSubmit(e as FormEvent, "pending_review")} loading={saving}
+              disabled={verificationRequired}
+              title={verificationRequired ? "Verify your identity to submit for review" : undefined}>
               Submit for Review
             </Button>
           </div>

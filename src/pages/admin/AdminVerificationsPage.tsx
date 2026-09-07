@@ -9,6 +9,7 @@ import { EmptyState } from "../../components/ui/EmptyState";
 import { TableSkeleton } from "../../components/ui/Skeleton";
 import { Input } from "../../components/ui/Input";
 import { useToast } from "../../components/ui/Toast";
+import type { VerificationStatus } from "../../types";
 
 interface VerifRow {
   id: string;
@@ -24,12 +25,12 @@ interface VerifRow {
   user: { id: string; full_name: string | null; email: string | null; avatar_url: string | null } | null;
 }
 
-const STATUS_OPTS = ["all", "pending", "under_review", "verified", "rejected", "resubmission_required"];
+const STATUS_OPTS: (VerificationStatus | "all")[] = ["all", "pending", "under_review", "verified", "rejected", "resubmission_required"];
 
 export default function AdminVerificationsPage() {
   const [rows, setRows] = useState<VerifRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("pending");
+  const [filter, setFilter] = useState<VerificationStatus | "all">("pending");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<VerifRow | null>(null);
   const [adminNotes, setAdminNotes] = useState("");

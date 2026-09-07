@@ -6,6 +6,7 @@ import { statusBadge } from "../../components/ui/Badge";
 import { Input } from "../../components/ui/Input";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { TableSkeleton } from "../../components/ui/Skeleton";
+import type { RentalStatus } from "../../types";
 
 interface RentalRow {
   id: string;
@@ -19,13 +20,13 @@ interface RentalRow {
   listing: { title: string } | null;
 }
 
-const STATUSES = ["all", "pending", "accepted", "payment_pending", "confirmed", "active", "returned", "completed", "cancelled", "disputed", "declined"];
+const STATUSES: (RentalStatus | "all")[] = ["all", "pending", "accepted", "payment_pending", "confirmed", "active", "returned", "completed", "cancelled", "disputed", "declined"];
 
 export default function AdminRentalsPage() {
   const [rentals, setRentals] = useState<RentalRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState<RentalStatus | "all">("all");
 
   useEffect(() => { load(); }, [filter]);
 

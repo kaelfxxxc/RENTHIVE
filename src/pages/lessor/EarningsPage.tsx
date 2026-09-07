@@ -122,7 +122,7 @@ export default function EarningsPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip formatter={(v: number) => [peso(v), "Earnings"]} />
+                    <Tooltip formatter={v => [peso(Number(v ?? 0)), "Earnings"]} />
                     <Area type="monotone" dataKey="earnings" stroke="#D97706" fill="url(#earnGrad)" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
