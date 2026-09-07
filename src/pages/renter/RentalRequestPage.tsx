@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, CreditCard, Shield, Loader2 } from "lucide-react";
+import { ChevronLeft, CreditCard, Shield, Loader2, AlertTriangle } from "lucide-react";
 import { supabase, db } from "../../lib/supabase";
 import { RenterLayout } from "../../components/layout/RenterLayout";
 import { Button } from "../../components/ui/Button";
 import { useToast } from "../../components/ui/Toast";
 import { useAuth } from "../../contexts/AuthContext";
+import { usePlatformSettings } from "../../contexts/SettingsContext";
 import type { Listing } from "../../types";
 
 export default function RentalRequestPage() {
@@ -14,6 +15,7 @@ export default function RentalRequestPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { success, error: toastError } = useToast();
+  const { settings, platformFeeRate, reservationFeeRate } = usePlatformSettings();
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -38,8 +40,24 @@ export default function RentalRequestPage() {
   const deliveryFee = pickupOption === "delivery" ? (listing.delivery_fee || 0) : 0;
   const total = rentalFee + listing.security_deposit + (listing.incidental_fee || 0) + deliveryFee;
 
+  // Both figures come from platform_settings, so they track the admin's
+  // configured values rather than hardcoded percentages.
+  const platformFee = Math.round(rentalFee * platformFeeRate);
+  const reservationDue = Math.round(rentalFee * reservationFeeRate);
+
+  const exceedsMaxDays = days > settings.max_rental_days;
+  const invalidDays = days <= 0;
+
   const handleSubmit = async () => {
     if (!user) return;
+    if (invalidDays) {
+      toastError("Invalid dates", "Please pick an end date after the start date.");
+      return;
+    }
+    if (exceedsMaxDays) {
+      toastError("Rental too long", `Rentals are limited to ${settings.max_rental_days} days.`);
+      return;
+    }
     setSubmitting(true);
     const { data, error } = await db.from("rental_requests").insert({
       listing_id: listing.id,
@@ -135,16 +153,33 @@ export default function RentalRequestPage() {
             <div className="flex justify-between font-bold border-t border-[var(--border)] pt-2">
               <span>Total</span><span className="text-[var(--primary)]">₱{total.toLocaleString()}</span>
             </div>
+            {platformFee > 0 && (
+              <p className="text-xs text-[var(--muted-foreground)] pt-1">
+                Includes a {settings.platform_fee_percent}% platform fee (₱{platformFee.toLocaleString()}) taken from the rental fee — the lessor receives the remainder.
+              </p>
+            )}
           </div>
 
           <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 flex gap-3">
             <Shield className="w-5 h-5 text-teal-600 mt-0.5 shrink-0" />
             <p className="text-xs text-teal-700 leading-relaxed">
-              You will only be charged after the lessor accepts your request. The security deposit is refunded after successful return.
+              You will only be charged after the lessor accepts your request. A {settings.reservation_fee_percent}% reservation
+              fee (₱{reservationDue.toLocaleString()}) is due first, with the balance payable before handover. The security
+              deposit is refunded after successful return.
             </p>
           </div>
 
-          <Button onClick={handleSubmit} loading={submitting} className="w-full" size="lg" icon={<CreditCard className="w-5 h-5" />}>
+          {exceedsMaxDays && (
+            <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
+              <p className="text-xs text-red-700 leading-relaxed">
+                This rental spans {days} days, over the {settings.max_rental_days}-day limit. Shorten the dates to continue.
+              </p>
+            </div>
+          )}
+
+          <Button onClick={handleSubmit} loading={submitting} disabled={exceedsMaxDays || invalidDays}
+            className="w-full" size="lg" icon={<CreditCard className="w-5 h-5" />}>
             Send Rental Request
           </Button>
         </div>

@@ -1,91 +1,117 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, Users, Package, DollarSign, ShoppingBag, Star, AlertTriangle, ShieldCheck } from "lucide-react";
-import { supabase } from "../../lib/supabase";
+import { Users, Package, DollarSign, ShoppingBag, AlertTriangle, ShieldCheck } from "lucide-react";
+import { db } from "../../lib/supabase";
 import { AdminLayout } from "../../components/layout/AdminLayout";
 import { TableSkeleton } from "../../components/ui/Skeleton";
+import type { AdminDashboardStats, AdminMonthlyPoint } from "../../types/database";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell, Legend,
 } from "recharts";
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const PIE_COLORS = ["#D97706", "#0D9488", "#6366F1", "#EC4899", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6"];
+
+const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
+
+const EMPTY_STATS: AdminDashboardStats = {
+  total_users: 0, renters: 0, lessors: 0, admins: 0,
+  total_listings: 0, published_listings: 0,
+  active_rentals: 0, completed_rentals: 0,
+  pending_verifications: 0, open_disputes: 0,
+  gross_volume: 0, platform_revenue: 0,
+  users_this_month: 0, users_prev_month: 0,
+  rentals_this_month: 0, rentals_prev_month: 0,
+  revenue_this_month: 0, revenue_prev_month: 0,
+};
+
+/** jsonb numerics arrive as strings, so every field is coerced. */
+function toStats(raw: Record<string, unknown>): AdminDashboardStats {
+  const num = (k: keyof AdminDashboardStats) => Number(raw[k] ?? 0);
+  return {
+    total_users: num("total_users"),
+    renters: num("renters"),
+    lessors: num("lessors"),
+    admins: num("admins"),
+    total_listings: num("total_listings"),
+    published_listings: num("published_listings"),
+    active_rentals: num("active_rentals"),
+    completed_rentals: num("completed_rentals"),
+    pending_verifications: num("pending_verifications"),
+    open_disputes: num("open_disputes"),
+    gross_volume: num("gross_volume"),
+    platform_revenue: num("platform_revenue"),
+    users_this_month: num("users_this_month"),
+    users_prev_month: num("users_prev_month"),
+    rentals_this_month: num("rentals_this_month"),
+    rentals_prev_month: num("rentals_prev_month"),
+    revenue_this_month: num("revenue_this_month"),
+    revenue_prev_month: num("revenue_prev_month"),
+  };
+}
 
 export default function AdminReportsPage() {
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ users: 0, listings: 0, rentals: 0, revenue: 0, disputes: 0, verifications: 0 });
-  const [monthlyData, setMonthlyData] = useState<{ month: string; users: number; rentals: number; revenue: number }[]>([]);
+  const [stats, setStats] = useState<AdminDashboardStats>(EMPTY_STATS);
+  const [monthlyData, setMonthlyData] = useState<AdminMonthlyPoint[]>([]);
   const [categoryData, setCategoryData] = useState<{ name: string; value: number }[]>([]);
-  const [roleData, setRoleData] = useState<{ role: string; count: number }[]>([]);
 
   useEffect(() => { load(); }, []);
 
   const load = async () => {
     setLoading(true);
-    const [usersRes, listingsRes, rentalsRes, disputesRes, verifRes] = await Promise.all([
-      supabase.from("profiles").select("id, role, created_at", { count: "exact" }),
-      supabase.from("listings").select("id, category_id, status, categories(name)", { count: "exact" }),
-      supabase.from("rental_requests").select("id, status, rental_fee, created_at", { count: "exact" }),
-      supabase.from("disputes").select("id", { count: "exact" }),
-      supabase.from("identity_verifications").select("id, status", { count: "exact" }),
+
+    // All three come from the same SQL functions the dashboard uses, so the
+    // two pages can no longer disagree about revenue.
+    const [statsRes, seriesRes, catRes] = await Promise.all([
+      db.rpc("admin_dashboard_stats"),
+      db.rpc("admin_monthly_series", { p_months: 6 }),
+      db.rpc("admin_category_breakdown"),
     ]);
 
-    const allUsers: any[] = usersRes.data || [];
-    const allListings: any[] = listingsRes.data || [];
-    const allRentals: any[] = rentalsRes.data || [];
+    if (statsRes.data) setStats(toStats(statsRes.data as Record<string, unknown>));
 
-    const revenue = allRentals.filter(r => ["completed", "returned"].includes(r.status)).reduce((s: number, r: any) => s + (r.rental_fee || 0), 0);
+    setMonthlyData(
+      ((seriesRes.data as AdminMonthlyPoint[]) || []).map(p => ({
+        ...p,
+        gross_volume: Number(p.gross_volume),
+        platform_revenue: Number(p.platform_revenue),
+        rentals: Number(p.rentals),
+        renters: Number(p.renters),
+        lessors: Number(p.lessors),
+      })),
+    );
 
-    setStats({
-      users: usersRes.count || 0,
-      listings: listingsRes.count || 0,
-      rentals: rentalsRes.count || 0,
-      revenue,
-      disputes: disputesRes.count || 0,
-      verifications: verifRes.count || 0,
-    });
+    setCategoryData(
+      ((catRes.data as { name: string; value: number | string }[]) || [])
+        .map(c => ({ name: c.name, value: Number(c.value) }))
+        .filter(c => c.value > 0),
+    );
 
-    // Role breakdown
-    const roleCounts: Record<string, number> = {};
-    allUsers.forEach((u: any) => { roleCounts[u.role] = (roleCounts[u.role] || 0) + 1; });
-    setRoleData(Object.entries(roleCounts).map(([role, count]) => ({ role, count })));
-
-    // Category breakdown for listings
-    const catCounts: Record<string, number> = {};
-    allListings.forEach((l: any) => {
-      const name = l.categories?.name || "Uncategorized";
-      catCounts[name] = (catCounts[name] || 0) + 1;
-    });
-    setCategoryData(Object.entries(catCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value));
-
-    // Monthly breakdown (last 6 months)
-    const now = new Date();
-    const monthly = [];
-    for (let i = 5; i >= 0; i--) {
-      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
-      const newUsers = allUsers.filter((u: any) => new Date(u.created_at) >= start && new Date(u.created_at) < end).length;
-      const monthRentals = allRentals.filter((r: any) => new Date(r.created_at) >= start && new Date(r.created_at) < end);
-      const monthRevenue = monthRentals.filter((r: any) => ["completed", "returned"].includes(r.status)).reduce((s: number, r: any) => s + (r.rental_fee || 0), 0);
-      monthly.push({ month: MONTHS[start.getMonth()], users: newUsers, rentals: monthRentals.length, revenue: monthRevenue });
-    }
-    setMonthlyData(monthly);
     setLoading(false);
   };
 
   const kpis = [
-    { label: "Total Users", value: stats.users.toLocaleString(), icon: <Users className="w-5 h-5 text-blue-600" />, bg: "bg-blue-50" },
-    { label: "Listings", value: stats.listings.toLocaleString(), icon: <Package className="w-5 h-5 text-teal-600" />, bg: "bg-teal-50" },
-    { label: "Rentals", value: stats.rentals.toLocaleString(), icon: <ShoppingBag className="w-5 h-5 text-amber-600" />, bg: "bg-amber-50" },
-    { label: "Platform Revenue", value: `₱${stats.revenue.toLocaleString()}`, icon: <DollarSign className="w-5 h-5 text-green-600" />, bg: "bg-green-50" },
-    { label: "Active Disputes", value: stats.disputes.toLocaleString(), icon: <AlertTriangle className="w-5 h-5 text-red-600" />, bg: "bg-red-50" },
-    { label: "ID Verifications", value: stats.verifications.toLocaleString(), icon: <ShieldCheck className="w-5 h-5 text-purple-600" />, bg: "bg-purple-50" },
+    { label: "Total Users", value: stats.total_users.toLocaleString(), icon: <Users className="w-5 h-5 text-blue-600" />, bg: "bg-blue-50" },
+    { label: "Listings", value: stats.total_listings.toLocaleString(), icon: <Package className="w-5 h-5 text-teal-600" />, bg: "bg-teal-50" },
+    { label: "Completed Rentals", value: stats.completed_rentals.toLocaleString(), icon: <ShoppingBag className="w-5 h-5 text-amber-600" />, bg: "bg-amber-50" },
+    { label: "Platform Revenue", value: peso(stats.platform_revenue), icon: <DollarSign className="w-5 h-5 text-green-600" />, bg: "bg-green-50" },
+    { label: "Open Disputes", value: stats.open_disputes.toLocaleString(), icon: <AlertTriangle className="w-5 h-5 text-red-600" />, bg: "bg-red-50" },
+    { label: "Pending Verifications", value: stats.pending_verifications.toLocaleString(), icon: <ShieldCheck className="w-5 h-5 text-purple-600" />, bg: "bg-purple-50" },
   ];
+
+  const roleData = [
+    { role: "renter", count: stats.renters },
+    { role: "lessor", count: stats.lessors },
+    { role: "admin", count: stats.admins },
+  ];
+
+  const hasRevenue = monthlyData.some(p => p.platform_revenue > 0);
+  const hasGrowth = monthlyData.some(p => p.rentals > 0 || p.renters > 0 || p.lessors > 0);
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>Analytics & Reports</h1>
+        <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>Analytics &amp; Reports</h1>
 
         {loading ? <TableSkeleton rows={3} /> : (
           <>
@@ -99,44 +125,60 @@ export default function AdminReportsPage() {
             </div>
 
             <div className="bg-white border border-[var(--border)] rounded-2xl p-5">
-              <h3 className="font-semibold mb-4">Platform Revenue (Last 6 Months)</h3>
-              <ResponsiveContainer width="100%" height={220}>
-                <AreaChart data={monthlyData}>
-                  <defs>
-                    <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#D97706" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#D97706" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(v: number) => [`₱${v.toLocaleString()}`, "Revenue"]} />
-                  <Area type="monotone" dataKey="revenue" stroke="#D97706" fill="url(#revGrad)" strokeWidth={2} />
-                </AreaChart>
-              </ResponsiveContainer>
+              <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
+                <h3 className="font-semibold">Platform Revenue (Last 6 Months)</h3>
+                <p className="text-xs text-[var(--muted-foreground)]">
+                  Gross transaction volume: {peso(stats.gross_volume)}
+                </p>
+              </div>
+              {!hasRevenue ? (
+                <p className="text-sm text-[var(--muted-foreground)] text-center py-10">
+                  No completed rentals yet — revenue will chart here once a rental completes.
+                </p>
+              ) : (
+                <ResponsiveContainer width="100%" height={220}>
+                  <AreaChart data={monthlyData}>
+                    <defs>
+                      <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#D97706" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#D97706" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip formatter={(v: number) => [peso(v), "Revenue"]} />
+                    <Area type="monotone" dataKey="platform_revenue" stroke="#D97706" fill="url(#revGrad)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
 
             <div className="grid lg:grid-cols-2 gap-5">
               <div className="bg-white border border-[var(--border)] rounded-2xl p-5">
-                <h3 className="font-semibold mb-4">User & Rental Growth</h3>
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="users" fill="#6366F1" radius={[4, 4, 0, 0]} name="New Users" />
-                    <Bar dataKey="rentals" fill="#0D9488" radius={[4, 4, 0, 0]} name="Rentals" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <h3 className="font-semibold mb-4">User &amp; Rental Growth</h3>
+                {!hasGrowth ? (
+                  <p className="text-sm text-[var(--muted-foreground)] text-center py-8">No activity in the last 6 months.</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={monthlyData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                      <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="renters" fill="#6366F1" radius={[4, 4, 0, 0]} name="New Renters" />
+                      <Bar dataKey="lessors" fill="#F59E0B" radius={[4, 4, 0, 0]} name="New Lessors" />
+                      <Bar dataKey="rentals" fill="#0D9488" radius={[4, 4, 0, 0]} name="Rentals" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </div>
 
               <div className="bg-white border border-[var(--border)] rounded-2xl p-5">
-                <h3 className="font-semibold mb-4">Listings by Category</h3>
+                <h3 className="font-semibold mb-4">Published Listings by Category</h3>
                 {categoryData.length === 0 ? (
-                  <p className="text-sm text-[var(--muted-foreground)] text-center py-8">No listings yet.</p>
+                  <p className="text-sm text-[var(--muted-foreground)] text-center py-8">No published listings yet.</p>
                 ) : (
                   <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
@@ -154,9 +196,9 @@ export default function AdminReportsPage() {
 
             <div className="bg-white border border-[var(--border)] rounded-2xl p-5">
               <h3 className="font-semibold mb-4">User Role Distribution</h3>
-              <div className="flex gap-4">
+              <div className="flex gap-4 flex-wrap">
                 {roleData.map((r, i) => (
-                  <div key={r.role} className="flex-1 rounded-xl p-4 text-center" style={{ backgroundColor: PIE_COLORS[i] + "20" }}>
+                  <div key={r.role} className="flex-1 min-w-24 rounded-xl p-4 text-center" style={{ backgroundColor: PIE_COLORS[i] + "20" }}>
                     <p className="text-2xl font-bold" style={{ color: PIE_COLORS[i] }}>{r.count}</p>
                     <p className="text-sm capitalize text-[var(--muted-foreground)]">{r.role}s</p>
                   </div>

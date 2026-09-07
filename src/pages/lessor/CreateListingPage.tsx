@@ -1,6 +1,6 @@
 import { useState, useEffect, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { ChevronLeft, Loader2, ShieldAlert } from "lucide-react";
 import { supabase, db } from "../../lib/supabase";
 import { LessorLayout } from "../../components/layout/LessorLayout";
 import { Button } from "../../components/ui/Button";
@@ -9,6 +9,7 @@ import { Select } from "../../components/ui/Select";
 import { ImageUploader } from "../../components/ui/ImageUploader";
 import { useToast } from "../../components/ui/Toast";
 import { useAuth } from "../../contexts/AuthContext";
+import { usePlatformSettings } from "../../contexts/SettingsContext";
 import type { Category } from "../../types";
 
 const conditionOpts = [
@@ -17,9 +18,10 @@ const conditionOpts = [
 ];
 
 export default function CreateListingPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { success, error: toastError } = useToast();
+  const { settings } = usePlatformSettings();
   const [categories, setCategories] = useState<Category[]>([]);
   const [saving, setSaving] = useState(false);
   const [primaryImage, setPrimaryImage] = useState<string | null>(null);
@@ -36,8 +38,16 @@ export default function CreateListingPage() {
 
   const set = (key: string, val: string | boolean) => setForm(f => ({ ...f, [key]: val }));
 
+  // platform_settings.require_verification decides whether an unverified lessor
+  // may publish. Drafts stay open either way so work is never lost.
+  const verificationRequired = settings.require_verification && profile?.verification_status !== "verified";
+
   const handleSubmit = async (e: FormEvent, status: "draft" | "pending_review") => {
     e.preventDefault();
+    if (status === "pending_review" && verificationRequired) {
+      toastError("Verification required", "Verify your identity before submitting a listing for review.");
+      return;
+    }
     if (!form.title || !form.price_per_day || !form.security_deposit) {
       toastError("Missing fields", "Title, daily price, and security deposit are required.");
       return;
