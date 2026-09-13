@@ -60,7 +60,7 @@ export default function LandingPage() {
   const [totalListings, setTotalListings] = useState(0);
   const [listingsLoading, setListingsLoading] = useState(true);
   const { profile } = useAuth();
-  const { settings } = usePlatformSettings();
+  const { settings, loaded: settingsLoaded } = usePlatformSettings();
 
   // Categories and their counts come from the `categories` table joined
   // against published listings — anon-readable so this works pre-login.
@@ -244,20 +244,26 @@ export default function LandingPage() {
           <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>Available to Rent</h2>
-              {!listingsLoading && totalListings > 0 && (
+              {settingsLoaded && !listingsLoading && canBrowse && totalListings > 0 && (
                 <Badge variant="amber">
                   {totalListings.toLocaleString()} {totalListings === 1 ? "item" : "items"} available
                 </Badge>
               )}
             </div>
-            {canBrowse && !listingsLoading && totalListings > PREVIEW_COUNT && (
+            {settingsLoaded && canBrowse && !listingsLoading && totalListings > PREVIEW_COUNT && (
               <Link to={seeAllTo} className="text-sm font-medium text-[var(--primary)] flex items-center gap-1 hover:underline">
                 See all {totalListings.toLocaleString()} items <ArrowRight className="w-4 h-4" />
               </Link>
             )}
           </div>
 
-          {!canBrowse ? (
+          {/* Wait for the setting before choosing a branch, so a guest never
+              sees listings flash in and then get replaced by the prompt. */}
+          {!settingsLoaded || listingsLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {Array.from({ length: PREVIEW_COUNT }).map((_, i) => <CardSkeleton key={i} />)}
+            </div>
+          ) : !canBrowse ? (
             <div className="bg-[var(--muted)] rounded-2xl border border-[var(--border)] p-8 text-center">
               <Package className="w-10 h-10 text-[var(--muted-foreground)] mx-auto mb-3" />
               <h3 className="font-semibold mb-1">Sign in to browse available items</h3>
@@ -266,10 +272,6 @@ export default function LandingPage() {
                 <Link to="/login"><Button>Sign in</Button></Link>
                 <Link to="/register"><Button variant="outline">Create account</Button></Link>
               </div>
-            </div>
-          ) : listingsLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {Array.from({ length: PREVIEW_COUNT }).map((_, i) => <CardSkeleton key={i} />)}
             </div>
           ) : listings.length === 0 ? (
             <EmptyState
