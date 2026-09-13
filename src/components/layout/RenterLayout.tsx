@@ -1,10 +1,11 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Search, Package, Bell, MessageSquare, User, LogOut, Hexagon, Menu, X, ChevronDown } from "lucide-react";
+import { Home, Search, Package, Bell, MessageSquare, User, LogOut, Menu, X, ChevronDown } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useUnreadCounts } from "../../hooks/useUnreadCounts";
 import { NavBadge } from "./NavBadge";
 import { Avatar } from "../ui/Avatar";
+import { Logo } from "../ui/Logo";
 
 interface NavItem { label: string; icon: ReactNode; path: string; badge?: number; }
 
@@ -35,9 +36,8 @@ export function RenterLayout({ children }: RenterLayoutProps) {
       {/* Desktop Nav */}
       <header className="sticky top-0 z-40 bg-white border-b border-[var(--border)] hidden md:block">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
-          <Link to="/renter/home" className="flex items-center gap-2">
-            <Hexagon className="w-7 h-7 text-[var(--primary)] fill-amber-100" />
-            <span className="font-bold text-lg text-[var(--foreground)]" style={{ fontFamily: "var(--font-display)" }}>RentHive</span>
+          <Link to="/renter/home" className="flex items-center">
+            <Logo className="h-9 sm:h-10" />
           </Link>
 
           <nav className="flex items-center gap-1">
@@ -74,9 +74,8 @@ export function RenterLayout({ children }: RenterLayoutProps) {
       {/* Mobile Top Bar */}
       <header className="sticky top-0 z-40 bg-white border-b border-[var(--border)] md:hidden">
         <div className="px-4 h-14 flex items-center justify-between">
-          <Link to="/renter/home" className="flex items-center gap-1.5">
-            <Hexagon className="w-6 h-6 text-[var(--primary)] fill-amber-100" />
-            <span className="font-bold text-base" style={{ fontFamily: "var(--font-display)" }}>RentHive</span>
+          <Link to="/renter/home" className="flex items-center">
+            <Logo className="h-8" />
           </Link>
           <button onClick={() => setMenuOpen(!menuOpen)} className="relative p-2">
             {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

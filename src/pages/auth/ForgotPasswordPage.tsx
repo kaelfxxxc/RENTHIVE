@@ -1,10 +1,11 @@
 import { useState, FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { Hexagon, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { useToast } from "../../components/ui/Toast";
+import { Logo } from "../../components/ui/Logo";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -31,9 +32,8 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-[var(--muted)] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 mb-4">
-            <Hexagon className="w-8 h-8 text-[var(--primary)] fill-amber-100" />
-            <span className="font-bold text-2xl" style={{ fontFamily: "var(--font-display)" }}>RentHive</span>
+          <Link to="/" className="inline-flex items-center mb-4">
+            <Logo className="h-12" />
           </Link>
           <h1 className="text-2xl font-bold">Reset your password</h1>
           <p className="text-sm text-[var(--muted-foreground)] mt-1">Enter your email and we&apos;ll send a reset link</p>

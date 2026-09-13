@@ -1,10 +1,11 @@
 import { useState, FormEvent, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lock, Hexagon, CheckCircle2 } from "lucide-react";
+import { Lock, CheckCircle2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { useToast } from "../../components/ui/Toast";
+import { Logo } from "../../components/ui/Logo";
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -37,9 +38,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-[var(--muted)] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Hexagon className="w-7 h-7 text-[var(--primary)]" />
-          </div>
+          <Logo className="block h-12 mx-auto mb-4" />
           <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>
             {done ? "Password Updated" : "Set New Password"}
           </h1>

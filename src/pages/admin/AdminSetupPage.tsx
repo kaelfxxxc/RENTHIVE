@@ -1,9 +1,10 @@
 import { useState, FormEvent } from "react";
-import { ShieldCheck, Hexagon, Loader2 } from "lucide-react";
+import { ShieldCheck, Loader2 } from "lucide-react";
 import { supabase, db } from "../../lib/supabase";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { useToast } from "../../components/ui/Toast";
+import { Logo } from "../../components/ui/Logo";
 
 const SETUP_KEY = import.meta.env.VITE_ADMIN_SETUP_KEY || "renthive-admin-2024";
 
@@ -59,9 +60,7 @@ export default function AdminSetupPage() {
     <div className="min-h-screen bg-[#0F172A] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-amber-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Hexagon className="w-8 h-8 text-amber-400" />
-          </div>
+          <Logo className="block h-14 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "var(--font-display)" }}>
             Admin Setup
           </h1>

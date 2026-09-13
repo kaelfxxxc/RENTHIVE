@@ -1,10 +1,11 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ListPlus, FileText, Package, Calendar, DollarSign, MessageSquare, Star, Bell, User, Settings, LogOut, Hexagon, Menu, X, ChevronLeft } from "lucide-react";
+import { LayoutDashboard, ListPlus, FileText, Package, Calendar, DollarSign, MessageSquare, Star, Bell, User, Settings, LogOut, Menu, X, ChevronLeft } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useUnreadCounts } from "../../hooks/useUnreadCounts";
 import { NavBadge, NavDot } from "./NavBadge";
 import { Avatar } from "../ui/Avatar";
+import { Logo } from "../ui/Logo";
 
 interface NavItem { label: string; icon: ReactNode; path: string; badge?: number; }
 
@@ -43,12 +44,11 @@ export function LessorLayout({ children }: LessorLayoutProps) {
     <aside className={`${mobile ? "w-64" : collapsed ? "w-16" : "w-60"} flex flex-col bg-[#0F172A] text-white transition-all duration-200 shrink-0`}>
       <div className={`h-16 flex items-center ${collapsed && !mobile ? "justify-center px-2" : "px-4"} border-b border-white/10`}>
         {(!collapsed || mobile) ? (
-          <Link to="/lessor/dashboard" className="flex items-center gap-2">
-            <Hexagon className="w-7 h-7 text-amber-400 fill-amber-400/20" />
-            <span className="font-bold text-lg" style={{ fontFamily: "var(--font-display)" }}>RentHive</span>
+          <Link to="/lessor/dashboard" className="flex items-center">
+            <Logo className="h-9" />
           </Link>
         ) : (
-          <Hexagon className="w-7 h-7 text-amber-400 fill-amber-400/20" />
+          <Logo variant="mark" className="h-8" />
         )}
       </div>
 
@@ -125,8 +125,7 @@ export function LessorLayout({ children }: LessorLayoutProps) {
             <Menu className="w-5 h-5" />
             <NavDot show={totalUnread > 0} />
           </button>
-          <Hexagon className="w-6 h-6 text-[var(--primary)] fill-amber-100" />
-          <span className="font-bold" style={{ fontFamily: "var(--font-display)" }}>RentHive</span>
+          <Logo className="h-8" />
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>

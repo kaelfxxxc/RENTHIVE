@@ -1,9 +1,10 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, ShieldCheck, ListPlus, Package, CreditCard, AlertTriangle, Star, BarChart2, Settings, FileText, LogOut, Hexagon, Menu, Bell, Search, ChevronLeft } from "lucide-react";
+import { LayoutDashboard, Users, ShieldCheck, ListPlus, Package, CreditCard, AlertTriangle, Star, BarChart2, Settings, FileText, LogOut, Menu, Bell, Search, ChevronLeft } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useUnreadCounts } from "../../hooks/useUnreadCounts";
 import { Avatar } from "../ui/Avatar";
+import { Logo } from "../ui/Logo";
 
 interface AdminLayoutProps { children: ReactNode; }
 
@@ -67,14 +68,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <div className={`h-16 flex items-center border-b border-white/10 ${collapsed && !mobile ? "justify-center" : "px-5 gap-2.5"}`}>
         {(!collapsed || mobile) ? (
           <>
-            <Hexagon className="w-7 h-7 text-amber-400 fill-amber-400/20 shrink-0" />
-            <div>
-              <p className="font-bold text-sm leading-none" style={{ fontFamily: "var(--font-display)" }}>RentHive</p>
-              <p className="text-[10px] text-white/40 mt-0.5 uppercase tracking-wider">Admin</p>
-            </div>
+            <Logo className="h-9" />
+            {/* The lockup already carries the wordmark, so only the role is left. */}
+            <span className="text-[10px] text-white/40 uppercase tracking-wider">Admin</span>
           </>
         ) : (
-          <Hexagon className="w-7 h-7 text-amber-400 fill-amber-400/20" />
+          <Logo variant="mark" className="h-8" />
         )}
       </div>
 

@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
-import { Hexagon, ShieldCheck, Star, ArrowRight, CheckCircle2, Camera, Package, Clock, Wallet, MessageSquare, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { ShieldCheck, Star, ArrowRight, CheckCircle2, Camera, Package, Clock, Wallet, MessageSquare, ChevronDown, ChevronUp, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
 import { db } from "../lib/supabase";
+import { Logo } from "../components/ui/Logo";
 import type { PublicCategoryCount } from "../types/database";
 
 /** Fallback glyph when a category row has no icon set. */
@@ -61,9 +62,8 @@ export default function LandingPage() {
       {/* Nav */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-[var(--border)]">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Hexagon className="w-7 h-7 text-[var(--primary)] fill-amber-100" />
-            <span className="font-bold text-xl" style={{ fontFamily: "var(--font-display)" }}>RentHive</span>
+          <div className="flex items-center">
+            <Logo className="h-10" />
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-[var(--muted-foreground)]">
             <a href="#how-it-works" className="hover:text-[var(--foreground)] transition-colors">How It Works</a>
@@ -258,7 +258,7 @@ export default function LandingPage() {
       {/* CTA */}
       <section className="py-20 bg-[#0F172A] text-white">
         <div className="max-w-3xl mx-auto px-4 text-center">
-          <Hexagon className="w-12 h-12 text-amber-400 fill-amber-400/20 mx-auto mb-4" />
+          <Logo className="block h-16 mx-auto mb-4" />
           <h2 className="text-3xl font-bold mb-3" style={{ fontFamily: "var(--font-display)" }}>Ready to join RentHive?</h2>
           <p className="text-white/60 mb-8">Register today, verify your identity, and start renting or earning in minutes.</p>
           <div className="flex flex-wrap gap-3 justify-center">
@@ -271,10 +271,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="bg-[#0A0F1A] text-white/40 text-xs py-8">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Hexagon className="w-5 h-5 text-amber-400/50" />
-            <span className="font-semibold text-white/60">RentHive</span>
-          </div>
+          <Logo className="h-9" />
           <p>© {new Date().getFullYear()} RentHive. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <a href="#" className="hover:text-white/60 transition-colors">Privacy</a>

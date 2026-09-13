@@ -1,10 +1,11 @@
 import { useState, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Hexagon, Eye, EyeOff, Users, Briefcase, X } from "lucide-react";
+import { Eye, EyeOff, Users, Briefcase, X } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { useToast } from "../../components/ui/Toast";
+import { Logo } from "../../components/ui/Logo";
 import { supabase } from "../../lib/supabase";
 
 export default function LoginPage() {
@@ -48,9 +49,8 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[var(--muted)] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 mb-4">
-            <Hexagon className="w-8 h-8 text-[var(--primary)] fill-amber-100" />
-            <span className="font-bold text-2xl" style={{ fontFamily: "var(--font-display)" }}>RentHive</span>
+          <Link to="/" className="inline-flex items-center mb-4">
+            <Logo className="h-12" />
           </Link>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Welcome back</h1>
           <p className="text-sm text-[var(--muted-foreground)] mt-1">Sign in to your account</p>
