@@ -6,6 +6,7 @@ import { ToastProvider } from "./components/ui/Toast";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
+import PublicListingDetailPage from "./pages/PublicListingDetailPage";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import VerifyAccountPage from "./pages/auth/VerifyAccountPage";
@@ -79,6 +80,9 @@ export default function App() {
               {/* Public */}
               <Route path="/admin-setup" element={<AdminSetupPage />} />
               <Route path="/" element={<LandingPage />} />
+              {/* Public listing detail — reachable without a session, so
+                  signed-out visitors can browse what's actually available. */}
+              <Route path="/listing/:id" element={<PublicListingDetailPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/verify-account" element={<VerifyAccountPage />} />

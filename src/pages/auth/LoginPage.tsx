@@ -1,5 +1,5 @@
 import { useState, FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff, Users, Briefcase, X } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "../../components/ui/Button";
@@ -8,9 +8,20 @@ import { useToast } from "../../components/ui/Toast";
 import { Logo } from "../../components/ui/Logo";
 import { supabase } from "../../lib/supabase";
 
+/**
+ * Only same-origin absolute paths are accepted. The value is handed straight
+ * to navigate(), so without this a crafted `/login?redirect=https://evil.test`
+ * (or the protocol-relative `//evil.test`) would bounce a freshly
+ * authenticated user off-site.
+ */
+function safeRedirect(raw: string | null): string | null {
+  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : null;
+}
+
 export default function LoginPage() {
   const { signIn, profile } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { error: toastError } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,7 +49,11 @@ export default function LoginPage() {
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", userData.user.id).single();
     const role = profile?.role;
 
-    if (role === "admin") navigate("/admin/dashboard", { replace: true });
+    // Honour where the visitor was headed (e.g. the listing they clicked
+    // "Request Rental" on) before falling back to their role's home.
+    const target = safeRedirect(searchParams.get("redirect"));
+    if (target) navigate(target, { replace: true });
+    else if (role === "admin") navigate("/admin/dashboard", { replace: true });
     else if (role === "lessor") navigate("/lessor/dashboard", { replace: true });
     else navigate("/renter/home", { replace: true });
 

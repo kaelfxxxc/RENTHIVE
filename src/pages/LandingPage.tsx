@@ -3,12 +3,29 @@ import { ShieldCheck, Star, ArrowRight, CheckCircle2, Camera, Package, Clock, Wa
 import { useState, useEffect } from "react";
 import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
-import { db } from "../lib/supabase";
+import { Badge } from "../components/ui/Badge";
+import { CardSkeleton } from "../components/ui/Skeleton";
+import { EmptyState } from "../components/ui/EmptyState";
+import { ProductCard } from "../components/shared/ProductCard";
+import { supabase, db } from "../lib/supabase";
 import { Logo } from "../components/ui/Logo";
+import { useAuth } from "../contexts/AuthContext";
+import { usePlatformSettings } from "../contexts/SettingsContext";
+import type { Listing } from "../types";
 import type { PublicCategoryCount } from "../types/database";
 
 /** Fallback glyph when a category row has no icon set. */
 const FALLBACK_ICON = "📦";
+
+/**
+ * Categories that stay on the page but aren't open yet. The rows still exist
+ * in the database — this only makes the tile inert on the landing page, so
+ * nothing has to be re-seeded to bring them online later.
+ */
+const COMING_SOON_SLUGS = new Set(["vehicles"]);
+
+/** How many published listings the landing page previews before "See all". */
+const PREVIEW_COUNT = 8;
 
 const howItWorks = [
   { step: "01", title: "Register & Verify", desc: "Create your account and verify your identity for a secure marketplace experience." },
@@ -39,6 +56,11 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showAuthChoice, setShowAuthChoice] = useState(false);
   const [categories, setCategories] = useState<PublicCategoryCount[]>([]);
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [totalListings, setTotalListings] = useState(0);
+  const [listingsLoading, setListingsLoading] = useState(true);
+  const { profile } = useAuth();
+  const { settings } = usePlatformSettings();
 
   // Categories and their counts come from the `categories` table joined
   // against published listings — anon-readable so this works pre-login.
@@ -56,6 +78,38 @@ export default function LandingPage() {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  // A preview of what's actually published, plus a true total over every
+  // published row. Both are readable by anon thanks to the "Public published
+  // listings" policy, so signed-out visitors see the same numbers as anyone.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setListingsLoading(true);
+      const [page, count] = await Promise.all([
+        supabase
+          .from("listings")
+          .select("*, lessor:profiles!listings_lessor_id_fkey(id,full_name,avatar_url,verification_status), category:categories(id,name,slug)")
+          .eq("status", "published")
+          .order("created_at", { ascending: false })
+          .limit(PREVIEW_COUNT),
+        // head-only exact count: the total, not the length of the page above.
+        supabase
+          .from("listings")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "published"),
+      ]);
+      if (cancelled) return;
+      setListings((page.data as unknown as Listing[]) || []);
+      setTotalListings(count.count ?? 0);
+      setListingsLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // The setting gates guests specifically, not signed-in visitors.
+  const canBrowse = Boolean(profile) || settings.allow_guest_browse;
+  const seeAllTo = profile?.role === "renter" ? "/renter/search" : "/login?redirect=/renter/search";
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -144,20 +198,95 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-4">
             <h2 className="text-2xl font-bold mb-8" style={{ fontFamily: "var(--font-display)" }}>Popular Categories</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-              {categories.map(cat => (
-                <Link key={cat.id} to={`/renter/search?category=${cat.slug}`}
-                  className="flex flex-col items-center p-4 rounded-2xl border border-[var(--border)] hover:border-amber-300 hover:bg-amber-50 transition-all group cursor-pointer text-center">
-                  <span className="text-3xl mb-2">{cat.icon || FALLBACK_ICON}</span>
-                  <p className="text-xs font-semibold text-[var(--foreground)] group-hover:text-amber-700">{cat.name}</p>
-                  <p className="text-xs text-[var(--muted-foreground)]">
-                    {cat.listing_count} {cat.listing_count === 1 ? "item" : "items"}
-                  </p>
-                </Link>
-              ))}
+              {categories.map(cat => {
+                const comingSoon = COMING_SOON_SLUGS.has(cat.slug);
+                const body = (
+                  <>
+                    <span className="text-3xl mb-2">{cat.icon || FALLBACK_ICON}</span>
+                    <p className={`text-xs font-semibold ${comingSoon ? "text-[var(--muted-foreground)]" : "text-[var(--foreground)] group-hover:text-amber-700"}`}>
+                      {cat.name}
+                    </p>
+                    {comingSoon ? (
+                      <p className="text-xs font-medium text-amber-600">Coming soon</p>
+                    ) : (
+                      <p className="text-xs text-[var(--muted-foreground)]">
+                        {cat.listing_count} {cat.listing_count === 1 ? "item" : "items"}
+                      </p>
+                    )}
+                  </>
+                );
+
+                // Not open yet: rendered as a plain inert tile rather than a
+                // link, so there's nothing to navigate to and no hover affordance.
+                if (comingSoon) return (
+                  <div key={cat.id} aria-disabled="true"
+                    title={`${cat.name} is coming soon`}
+                    className="flex flex-col items-center p-4 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--muted)]/40 cursor-not-allowed text-center opacity-70">
+                    {body}
+                  </div>
+                );
+
+                return (
+                  <Link key={cat.id} to={`/renter/search?category=${cat.slug}`}
+                    className="flex flex-col items-center p-4 rounded-2xl border border-[var(--border)] hover:border-amber-300 hover:bg-amber-50 transition-all group cursor-pointer text-center">
+                    {body}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>
       )}
+
+      {/* Available to rent — real published listings, visible signed out */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>Available to Rent</h2>
+              {!listingsLoading && totalListings > 0 && (
+                <Badge variant="amber">
+                  {totalListings.toLocaleString()} {totalListings === 1 ? "item" : "items"} available
+                </Badge>
+              )}
+            </div>
+            {canBrowse && !listingsLoading && totalListings > PREVIEW_COUNT && (
+              <Link to={seeAllTo} className="text-sm font-medium text-[var(--primary)] flex items-center gap-1 hover:underline">
+                See all {totalListings.toLocaleString()} items <ArrowRight className="w-4 h-4" />
+              </Link>
+            )}
+          </div>
+
+          {!canBrowse ? (
+            <div className="bg-[var(--muted)] rounded-2xl border border-[var(--border)] p-8 text-center">
+              <Package className="w-10 h-10 text-[var(--muted-foreground)] mx-auto mb-3" />
+              <h3 className="font-semibold mb-1">Sign in to browse available items</h3>
+              <p className="text-sm text-[var(--muted-foreground)] mb-5">Create a free account to see what's available to rent.</p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <Link to="/login"><Button>Sign in</Button></Link>
+                <Link to="/register"><Button variant="outline">Create account</Button></Link>
+              </div>
+            </div>
+          ) : listingsLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {Array.from({ length: PREVIEW_COUNT }).map((_, i) => <CardSkeleton key={i} />)}
+            </div>
+          ) : listings.length === 0 ? (
+            <EmptyState
+              icon={<Package className="w-7 h-7" />}
+              title="No items listed yet"
+              description="Nothing is available to rent right now. Check back soon — or list something of your own."
+              action={<Link to="/register?role=lessor"><Button variant="outline">List Your Product</Button></Link>}
+            />
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {listings.map(l => (
+                <ProductCard key={l.id} listing={l} to={`/listing/${l.id}`} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* How it works */}
       <section id="how-it-works" className="py-20 bg-[var(--muted)]">

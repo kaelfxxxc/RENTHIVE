@@ -6,6 +6,11 @@ interface ProductCardProps {
   listing: Listing;
   onFavorite?: (id: string) => void;
   isFavorited?: boolean;
+  /**
+   * Where the card links. Defaults to the signed-in renter detail route;
+   * public pages pass `/listing/:id`, which works without a session.
+   */
+  to?: string;
 }
 
 const conditionLabel: Record<string, string> = {
@@ -16,13 +21,14 @@ const conditionColor: Record<string, string> = {
   good: "text-blue-600 bg-blue-50", fair: "text-amber-600 bg-amber-50", poor: "text-red-600 bg-red-50",
 };
 
-export function ProductCard({ listing, onFavorite, isFavorited }: ProductCardProps) {
+export function ProductCard({ listing, onFavorite, isFavorited, to }: ProductCardProps) {
   const imageUrl = listing.primary_image_url ||
     `https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=280&fit=crop&auto=format`;
+  const href = to ?? `/renter/listing/${listing.id}`;
 
   return (
     <div className="group bg-white rounded-2xl border border-[var(--border)] overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
-      <Link to={`/renter/listing/${listing.id}`} className="block">
+      <Link to={href} className="block">
         <div className="relative h-48 bg-gray-100 overflow-hidden">
           <img
             src={imageUrl}
@@ -46,7 +52,7 @@ export function ProductCard({ listing, onFavorite, isFavorited }: ProductCardPro
       </Link>
       <div className="p-4">
         <div className="flex items-start justify-between gap-2 mb-1">
-          <Link to={`/renter/listing/${listing.id}`}>
+          <Link to={href}>
             <h3 className="font-semibold text-sm text-[var(--foreground)] line-clamp-1 hover:text-[var(--primary)] transition-colors">
               {listing.title}
             </h3>
