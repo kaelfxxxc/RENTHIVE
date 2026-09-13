@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { DollarSign, Package, FileText, Star, CheckCircle2, AlertTriangle, TrendingUp, Eye } from "lucide-react";
+import { PhilippinePeso, Package, FileText, Star, CheckCircle2, AlertTriangle, TrendingUp, Eye } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, Legend } from "recharts";
 import { supabase, db } from "../../lib/supabase";
 import { LessorLayout } from "../../components/layout/LessorLayout";
@@ -107,7 +107,7 @@ export default function LessorDashboardPage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon={<DollarSign className="w-5 h-5 text-emerald-600" />} label="Total Earnings"
+            <StatCard icon={<PhilippinePeso className="w-5 h-5 text-emerald-600" />} label="Total Earnings"
               value={peso(stats?.total_earnings ?? 0)} sub="Net of platform fee" color="bg-emerald-50" />
             <StatCard icon={<Package className="w-5 h-5 text-blue-600" />} label="Active Rentals"
               value={String(stats?.active_rentals ?? 0)} sub="Currently rented out" color="bg-blue-50" />

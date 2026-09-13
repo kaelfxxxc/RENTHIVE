@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Package, DollarSign, AlertTriangle, ShieldCheck, FileText, TrendingUp, Activity } from "lucide-react";
+import { Users, Package, PhilippinePeso, AlertTriangle, ShieldCheck, FileText, TrendingUp, Activity } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, CartesianGrid, Legend } from "recharts";
 import { supabase, db } from "../../lib/supabase";
 import { AdminLayout } from "../../components/layout/AdminLayout";
@@ -156,7 +156,7 @@ export default function AdminDashboardPage() {
             <StatCard icon={<Package className="w-5 h-5 text-amber-600" />} label="Active Rentals"
               value={String(stats?.active_rentals ?? 0)} color="bg-amber-50"
               change={pctChange(stats?.rentals_this_month ?? 0, stats?.rentals_prev_month ?? 0)} />
-            <StatCard icon={<DollarSign className="w-5 h-5 text-emerald-600" />} label="Platform Revenue"
+            <StatCard icon={<PhilippinePeso className="w-5 h-5 text-emerald-600" />} label="Platform Revenue"
               value={peso(stats?.platform_revenue ?? 0)} color="bg-emerald-50"
               change={pctChange(stats?.revenue_this_month ?? 0, stats?.revenue_prev_month ?? 0)} />
             <StatCard icon={<FileText className="w-5 h-5 text-indigo-600" />} label="Total Listings"

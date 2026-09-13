@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ListPlus, FileText, Package, Calendar, DollarSign, MessageSquare, Star, Bell, User, Settings, LogOut, Menu, X, ChevronLeft } from "lucide-react";
+import { LayoutDashboard, ListPlus, FileText, Package, Calendar, PhilippinePeso, MessageSquare, Star, Bell, User, Settings, LogOut, Menu, X, ChevronLeft } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useUnreadCounts } from "../../hooks/useUnreadCounts";
 import { NavBadge, NavDot } from "./NavBadge";
@@ -25,7 +25,7 @@ export function LessorLayout({ children }: LessorLayoutProps) {
     { label: "Requests", icon: <FileText className="w-5 h-5" />, path: "/lessor/requests" },
     { label: "Rentals", icon: <Package className="w-5 h-5" />, path: "/lessor/rentals" },
     { label: "Calendar", icon: <Calendar className="w-5 h-5" />, path: "/lessor/calendar" },
-    { label: "Earnings", icon: <DollarSign className="w-5 h-5" />, path: "/lessor/earnings" },
+    { label: "Earnings", icon: <PhilippinePeso className="w-5 h-5" />, path: "/lessor/earnings" },
     { label: "Messages", icon: <MessageSquare className="w-5 h-5" />, path: "/lessor/messages", badge: unreadMessages },
     { label: "Reviews", icon: <Star className="w-5 h-5" />, path: "/lessor/reviews" },
     { label: "Notifications", icon: <Bell className="w-5 h-5" />, path: "/lessor/notifications", badge: unreadNotifications },

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Package, DollarSign, ShoppingBag, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Users, Package, PhilippinePeso, ShoppingBag, AlertTriangle, ShieldCheck } from "lucide-react";
 import { db } from "../../lib/supabase";
 import { AdminLayout } from "../../components/layout/AdminLayout";
 import { TableSkeleton } from "../../components/ui/Skeleton";
@@ -94,7 +94,7 @@ export default function AdminReportsPage() {
     { label: "Total Users", value: stats.total_users.toLocaleString(), icon: <Users className="w-5 h-5 text-blue-600" />, bg: "bg-blue-50" },
     { label: "Listings", value: stats.total_listings.toLocaleString(), icon: <Package className="w-5 h-5 text-teal-600" />, bg: "bg-teal-50" },
     { label: "Completed Rentals", value: stats.completed_rentals.toLocaleString(), icon: <ShoppingBag className="w-5 h-5 text-amber-600" />, bg: "bg-amber-50" },
-    { label: "Platform Revenue", value: peso(stats.platform_revenue), icon: <DollarSign className="w-5 h-5 text-green-600" />, bg: "bg-green-50" },
+    { label: "Platform Revenue", value: peso(stats.platform_revenue), icon: <PhilippinePeso className="w-5 h-5 text-green-600" />, bg: "bg-green-50" },
     { label: "Open Disputes", value: stats.open_disputes.toLocaleString(), icon: <AlertTriangle className="w-5 h-5 text-red-600" />, bg: "bg-red-50" },
     { label: "Pending Verifications", value: stats.pending_verifications.toLocaleString(), icon: <ShieldCheck className="w-5 h-5 text-purple-600" />, bg: "bg-purple-50" },
   ];

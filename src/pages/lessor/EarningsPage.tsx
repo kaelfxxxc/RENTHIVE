@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, DollarSign, ArrowUpRight, Calendar } from "lucide-react";
+import { TrendingUp, PhilippinePeso, ArrowUpRight, Calendar } from "lucide-react";
 import { supabase, db } from "../../lib/supabase";
 import { LessorLayout } from "../../components/layout/LessorLayout";
 import { TableSkeleton } from "../../components/ui/Skeleton";
@@ -78,7 +78,7 @@ export default function EarningsPage() {
   };
 
   const stats = [
-    { label: "Total Earned", value: peso(summary.net), sub: `Net after ${summary.fee_percent}% platform fee`, icon: <DollarSign className="w-5 h-5 text-amber-600" />, bg: "bg-amber-50" },
+    { label: "Total Earned", value: peso(summary.net), sub: `Net after ${summary.fee_percent}% platform fee`, icon: <PhilippinePeso className="w-5 h-5 text-amber-600" />, bg: "bg-amber-50" },
     { label: "This Month", value: peso(summary.this_month), sub: "Net earnings", icon: <Calendar className="w-5 h-5 text-teal-600" />, bg: "bg-teal-50" },
     { label: "Released", value: peso(summary.released), sub: "Paid out to you", icon: <ArrowUpRight className="w-5 h-5 text-green-600" />, bg: "bg-green-50" },
     { label: "Pending Release", value: peso(summary.pending), sub: "Held until completion", icon: <TrendingUp className="w-5 h-5 text-blue-600" />, bg: "bg-blue-50" },
