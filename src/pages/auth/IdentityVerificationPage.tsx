@@ -61,13 +61,29 @@ export default function IdentityVerificationPage() {
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const uploadFile = async (file: File, path: string): Promise<string | null> => {
+  /**
+   * Uploads a document to `<user-id>/<kind>-<timestamp>.<ext>` and returns the
+   * storage path it landed at.
+   *
+   * The user ID has to be the FIRST path segment. The RLS policy on the
+   * identity-documents bucket compares auth.uid() against
+   * (storage.foldername(name))[1], so a path like "front/<uuid>-…" fails the
+   * check — segment [1] is the literal "front" — and Supabase rejects the
+   * insert with a row-level security error.
+   *
+   * We hand back the path rather than a URL because the bucket is private:
+   * a getPublicUrl() link points at /object/public/… and could never serve it.
+   * The admin page signs these paths on read instead.
+   */
+  const uploadFile = async (file: File, kind: string): Promise<{ path: string | null; error: string | null }> => {
     const ext = file.name.split(".").pop();
-    const filePath = `${path}/${user!.id}-${Date.now()}.${ext}`;
+    const filePath = `${user!.id}/${kind}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("identity-documents").upload(filePath, file);
-    if (error) return null;
-    const { data } = supabase.storage.from("identity-documents").getPublicUrl(filePath);
-    return data.publicUrl;
+    if (error) {
+      console.error("identity-documents upload failed:", filePath, error);
+      return { path: null, error: error.message };
+    }
+    return { path: filePath, error: null };
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -78,14 +94,14 @@ export default function IdentityVerificationPage() {
     }
     setSubmitting(true);
 
-    const [frontUrl, backUrl, selfieUrl] = await Promise.all([
+    const [front, back, selfie] = await Promise.all([
       uploadFile(frontFile, "front"),
-      backFile ? uploadFile(backFile, "back") : Promise.resolve(null),
+      backFile ? uploadFile(backFile, "back") : Promise.resolve({ path: null, error: null }),
       uploadFile(selfieFile, "selfie"),
     ]);
 
-    if (!frontUrl || !selfieUrl) {
-      toastError("Upload failed", "Could not upload your documents. Please try again.");
+    if (!front.path || !selfie.path) {
+      toastError("Upload failed", front.error || selfie.error || "Could not upload your documents. Please try again.");
       setSubmitting(false);
       return;
     }
@@ -94,9 +110,11 @@ export default function IdentityVerificationPage() {
       user_id: user!.id,
       id_type: idType,
       id_number: idNumber || null,
-      front_image_url: frontUrl,
-      back_image_url: backUrl || null,
-      selfie_url: selfieUrl,
+      // Storage paths, not URLs — the bucket is private and the admin page
+      // signs these on read.
+      front_image_url: front.path,
+      back_image_url: back.path,
+      selfie_url: selfie.path,
       status: "pending",
       submitted_at: new Date().toISOString(),
     });

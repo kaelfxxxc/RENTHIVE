@@ -27,6 +27,28 @@ interface VerifRow {
 
 const STATUS_OPTS: (VerificationStatus | "all")[] = ["all", "pending", "under_review", "verified", "rejected", "resubmission_required"];
 
+/** How long a signed document link stays valid. */
+const SIGNED_URL_TTL_SECONDS = 60 * 60;
+
+/**
+ * Verification documents live in a private bucket, so what's stored on the row
+ * is a storage path that has to be signed before a browser can load it.
+ * Records written before that became the case hold a full public URL — those
+ * are passed through untouched so older submissions still render.
+ */
+async function signDocument(value: string | null): Promise<string | null> {
+  if (!value) return null;
+  if (/^https?:\/\//i.test(value)) return value;
+  const { data, error } = await supabase.storage
+    .from("identity-documents")
+    .createSignedUrl(value, SIGNED_URL_TTL_SECONDS);
+  if (error) {
+    console.error("Failed to sign identity document:", value, error);
+    return null;
+  }
+  return data.signedUrl;
+}
+
 export default function AdminVerificationsPage() {
   const [rows, setRows] = useState<VerifRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,9 +57,31 @@ export default function AdminVerificationsPage() {
   const [selected, setSelected] = useState<VerifRow | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [docUrls, setDocUrls] = useState<Record<string, string>>({});
+  const [signingDocs, setSigningDocs] = useState(false);
   const { success, error: toastError } = useToast();
 
   useEffect(() => { load(); }, [filter]);
+
+  // Signed links expire, so they're generated fresh each time a record is
+  // opened rather than being stored on the row.
+  useEffect(() => {
+    if (!selected) { setDocUrls({}); setSigningDocs(false); return; }
+    let cancelled = false;
+    setSigningDocs(true);
+    const docs: [string, string | null][] = [
+      ["Front of ID", selected.front_image_url],
+      ["Back of ID", selected.back_image_url],
+      ["Selfie with ID", selected.selfie_url],
+    ];
+    Promise.all(docs.map(async ([label, path]) => [label, await signDocument(path)] as const))
+      .then(entries => {
+        if (cancelled) return;
+        setDocUrls(Object.fromEntries(entries.filter(([, url]) => url)) as Record<string, string>);
+        setSigningDocs(false);
+      });
+    return () => { cancelled = true; };
+  }, [selected]);
 
   const load = async () => {
     setLoading(true);
@@ -180,26 +224,25 @@ export default function AdminVerificationsPage() {
               </div>
             </div>
 
-            {/* Document images */}
+            {/* Document images — signed on read, since the bucket is private */}
             <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: "Front of ID", url: selected.front_image_url },
-                { label: "Back of ID", url: selected.back_image_url },
-                { label: "Selfie with ID", url: selected.selfie_url },
-              ].map(doc => (
-                <div key={doc.label}>
-                  <p className="text-xs text-[var(--muted-foreground)] mb-1.5">{doc.label}</p>
-                  {doc.url ? (
-                    <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                      <img src={doc.url} alt={doc.label} className="w-full aspect-[4/3] object-cover rounded-xl border border-[var(--border)] hover:opacity-90 transition-opacity cursor-zoom-in" />
-                    </a>
-                  ) : (
-                    <div className="w-full aspect-[4/3] bg-[var(--muted)] rounded-xl border border-[var(--border)] flex items-center justify-center">
-                      <p className="text-xs text-[var(--muted-foreground)]">Not uploaded</p>
-                    </div>
-                  )}
-                </div>
-              ))}
+              {["Front of ID", "Back of ID", "Selfie with ID"].map(label => {
+                const url = docUrls[label];
+                return (
+                  <div key={label}>
+                    <p className="text-xs text-[var(--muted-foreground)] mb-1.5">{label}</p>
+                    {url ? (
+                      <a href={url} target="_blank" rel="noopener noreferrer">
+                        <img src={url} alt={label} className="w-full aspect-[4/3] object-cover rounded-xl border border-[var(--border)] hover:opacity-90 transition-opacity cursor-zoom-in" />
+                      </a>
+                    ) : (
+                      <div className="w-full aspect-[4/3] bg-[var(--muted)] rounded-xl border border-[var(--border)] flex items-center justify-center">
+                        <p className="text-xs text-[var(--muted-foreground)]">{signingDocs ? "Loading…" : "Not uploaded"}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Admin notes */}
