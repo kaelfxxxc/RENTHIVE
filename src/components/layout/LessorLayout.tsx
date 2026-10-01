@@ -41,7 +41,7 @@ export function LessorLayout({ children }: LessorLayoutProps) {
   const totalUnread = unreadNotifications + unreadMessages;
 
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
-    <aside className={`${mobile ? "w-64" : collapsed ? "w-16" : "w-60"} flex flex-col bg-[#0F172A] text-white transition-all duration-200 shrink-0`}>
+    <aside className={`${mobile ? "w-64" : collapsed ? "w-16" : "w-60"} h-full flex flex-col bg-[#0F172A] text-white transition-all duration-200 shrink-0`}>
       <div className={`h-16 flex items-center ${collapsed && !mobile ? "justify-center px-2" : "px-4"} border-b border-white/10`}>
         {(!collapsed || mobile) ? (
           <Link to="/lessor/dashboard" className="flex items-center">
@@ -99,7 +99,7 @@ export function LessorLayout({ children }: LessorLayoutProps) {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[var(--muted)]">
+    <div className="app-shell flex h-dvh overflow-hidden bg-[var(--muted)]">
       {/* Desktop Sidebar */}
       <div className="hidden md:flex relative">
         <Sidebar />
@@ -112,7 +112,7 @@ export function LessorLayout({ children }: LessorLayoutProps) {
       {mobileOpen && (
         <>
           <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={() => setMobileOpen(false)} />
-          <div className="fixed inset-y-0 left-0 z-50 md:hidden">
+          <div className="mobile-drawer fixed inset-y-0 left-0 z-50 md:hidden">
             <Sidebar mobile />
           </div>
         </>
@@ -120,7 +120,7 @@ export function LessorLayout({ children }: LessorLayoutProps) {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile header */}
-        <header className="md:hidden sticky top-0 z-30 bg-white border-b border-[var(--border)] h-14 flex items-center px-4 gap-3">
+        <header className="md:hidden sticky top-0 z-30 bg-white border-b border-[var(--border)] mobile-safe-header shrink-0 h-14 flex items-center px-4 gap-3">
           <button onClick={() => setMobileOpen(true)} className="relative p-1">
             <Menu className="w-5 h-5" />
             <NavDot show={totalUnread > 0} />
@@ -128,7 +128,7 @@ export function LessorLayout({ children }: LessorLayoutProps) {
           <Logo className="h-8" />
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+        <main className="mobile-safe-main flex-1 min-h-0 overflow-y-auto p-4 md:p-6">{children}</main>
       </div>
     </div>
   );

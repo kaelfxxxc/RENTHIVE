@@ -114,7 +114,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
+    <div className="app-shell flex h-dvh overflow-hidden bg-slate-50">
       {/* Desktop sidebar */}
       <div className="hidden md:flex relative">
         <SidebarContent />
@@ -126,12 +126,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {mobileOpen && (
         <>
           <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={() => setMobileOpen(false)} />
-          <div className="fixed inset-y-0 left-0 z-50 md:hidden"><SidebarContent mobile /></div>
+          <div className="mobile-drawer fixed inset-y-0 left-0 z-50 md:hidden"><SidebarContent mobile /></div>
         </>
       )}
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="sticky top-0 z-30 bg-white border-b border-[var(--border)] h-14 flex items-center px-4 gap-3">
+        <header className="sticky top-0 z-30 bg-white border-b border-[var(--border)] mobile-safe-header shrink-0 h-14 flex items-center px-4 gap-3">
           <button onClick={() => setMobileOpen(true)} className="md:hidden p-1"><Menu className="w-5 h-5" /></button>
           <form onSubmit={handleSearch} className="flex-1 hidden md:flex items-center gap-2 max-w-md bg-[var(--muted)] rounded-xl px-3 py-2">
             <Search className="w-4 h-4 text-[var(--muted-foreground)]" />
@@ -155,7 +155,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </Link>
           <Avatar src={profile?.avatar_url} name={profile?.full_name} size="sm" />
         </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+        <main className="mobile-safe-main flex-1 min-h-0 overflow-y-auto p-4 md:p-6">{children}</main>
       </div>
     </div>
   );

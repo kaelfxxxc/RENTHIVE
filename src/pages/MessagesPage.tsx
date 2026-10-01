@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, MessageSquare } from "lucide-react";
+import { Send, MessageSquare, ChevronLeft } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { supabase, db } from "../lib/supabase";
 import { Avatar } from "../components/ui/Avatar";
@@ -103,9 +103,9 @@ export default function MessagesPage({ layout: Layout }: MessagesPageProps) {
 
   return (
     <Layout>
-      <div className="bg-white border border-[var(--border)] rounded-2xl overflow-hidden flex" style={{ height: "calc(100vh - 10rem)" }}>
+      <div className="bg-white border border-[var(--border)] rounded-2xl overflow-hidden flex" style={{ height: "calc(100dvh - 12rem - env(safe-area-inset-top) - env(safe-area-inset-bottom))", minHeight: "260px" }}>
         {/* Conversations list */}
-        <div className="w-72 border-r border-[var(--border)] flex flex-col shrink-0">
+        <div className={`${selectedConv ? "hidden md:flex" : "flex"} w-full md:w-64 lg:w-72 border-r border-[var(--border)] flex-col shrink-0`}>
           <div className="p-4 border-b border-[var(--border)]">
             <h2 className="font-bold">Messages</h2>
           </div>
@@ -135,7 +135,7 @@ export default function MessagesPage({ layout: Layout }: MessagesPageProps) {
         </div>
 
         {/* Chat area */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className={`${selectedConv ? "flex" : "hidden md:flex"} flex-1 flex-col min-w-0`}>
           {!selectedConv ? (
             <div className="flex-1 flex items-center justify-center">
               <EmptyState icon={<MessageSquare className="w-8 h-8" />} title="Select a conversation" description="Choose a conversation or message a rentor from a listing." />
@@ -143,6 +143,7 @@ export default function MessagesPage({ layout: Layout }: MessagesPageProps) {
           ) : (
             <>
               <div className="p-4 border-b border-[var(--border)] flex items-center gap-3">
+                <button type="button" aria-label="Back to conversations" onClick={() => setSelectedConv(null)} className="md:hidden min-w-11 min-h-11 flex items-center justify-center"><ChevronLeft className="w-5 h-5" /></button>
                 <Avatar src={otherUser(selectedConv)?.avatar_url} name={otherUser(selectedConv)?.full_name} size="sm" />
                 <p className="font-semibold text-sm">{otherUser(selectedConv)?.full_name}</p>
               </div>
@@ -157,7 +158,7 @@ export default function MessagesPage({ layout: Layout }: MessagesPageProps) {
                     <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"} gap-2 items-end`}>
                       {!isMe && <Avatar src={(m as any).sender?.avatar_url} name={(m as any).sender?.full_name} size="xs" />}
                       <div className={`max-w-xs lg:max-w-md px-4 py-2.5 rounded-2xl text-sm ${isMe ? "bg-[var(--primary)] text-white rounded-br-sm" : "bg-[var(--muted)] text-[var(--foreground)] rounded-bl-sm"}`}>
-                        <p className="leading-relaxed">{m.content}</p>
+                        <p className="leading-relaxed break-words [overflow-wrap:anywhere]">{m.content}</p>
                         <p className={`text-xs mt-1 ${isMe ? "text-white/60" : "text-[var(--muted-foreground)]"}`}>
                           {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         </p>

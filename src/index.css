@@ -1,6 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
 @import 'tailwindcss';
 
+/* Device insets also apply when launched from the home screen. */
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; }
+img { max-width: 100%; }
+main, .grid > * { min-width: 0; }
+.mobile-safe-header { padding-top: env(safe-area-inset-top); height: calc(3.5rem + env(safe-area-inset-top)); }
+.mobile-safe-main { padding-bottom: max(1rem, env(safe-area-inset-bottom)); padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+.mobile-drawer { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); background: #0f172a; }
+.mobile-bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
+.mobile-bottom-spacer { height: calc(4rem + env(safe-area-inset-bottom)); }
+.install-app { position: fixed; z-index: 45; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: calc(4.75rem + env(safe-area-inset-bottom)); max-width: 480px; margin-left: auto; padding: 12px; border: 1px solid #fde0b0; border-radius: 18px; background: #fff; box-shadow: 0 8px 35px #11182720; }
+@media (min-width: 1024px) { .install-app { bottom: 20px; } }
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea { font-size: 16px !important; }
+  button, a, input, select, textarea { touch-action: manipulation; }
+  .app-shell { min-height: 0; }
+  .mobile-bottom-nav a { font-size: 10px; }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

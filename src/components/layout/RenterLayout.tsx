@@ -34,7 +34,7 @@ export function RenterLayout({ children }: RenterLayoutProps) {
   return (
     <div className="min-h-screen bg-[var(--muted)]">
       {/* Desktop Nav */}
-      <header className="sticky top-0 z-40 bg-white border-b border-[var(--border)] hidden md:block">
+      <header className="sticky top-0 z-40 bg-white border-b border-[var(--border)] hidden lg:block">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
           <Link to="/renter/home" className="flex items-center">
             <Logo className="h-9 sm:h-10" />
@@ -72,7 +72,7 @@ export function RenterLayout({ children }: RenterLayoutProps) {
       </header>
 
       {/* Mobile Top Bar */}
-      <header className="sticky top-0 z-40 bg-white border-b border-[var(--border)] md:hidden">
+      <header className="mobile-safe-header sticky top-0 z-40 bg-white border-b border-[var(--border)] lg:hidden">
         <div className="px-4 h-14 flex items-center justify-between">
           <Link to="/renter/home" className="flex items-center">
             <Logo className="h-8" />
@@ -103,7 +103,7 @@ export function RenterLayout({ children }: RenterLayoutProps) {
       <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>
 
       {/* Mobile Bottom Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 md:hidden bg-white border-t border-[var(--border)] z-40">
+      <nav className="mobile-bottom-nav fixed bottom-0 left-0 right-0 lg:hidden bg-white border-t border-[var(--border)] z-40">
         <div className="grid grid-cols-5 h-16">
           {navItems.map(item => (
             <Link key={item.path} to={item.path}
@@ -117,7 +117,7 @@ export function RenterLayout({ children }: RenterLayoutProps) {
           ))}
         </div>
       </nav>
-      <div className="h-16 md:hidden" />
+      <div className="mobile-bottom-spacer h-16 lg:hidden" />
     </div>
   );
 }

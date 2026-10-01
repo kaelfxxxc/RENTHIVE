@@ -145,7 +145,7 @@ export default function CreateListingPage() {
           {/* Pricing */}
           <div className="bg-white border border-[var(--border)] rounded-xl p-5 space-y-4">
             <h2 className="font-semibold">Pricing</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="Price Per Day (₱) *" type="number" min="0" placeholder="500" value={form.price_per_day} onChange={e => set("price_per_day", e.target.value)} />
               <Input label="Price Per Week (₱)" type="number" min="0" placeholder="3000" value={form.price_per_week} onChange={e => set("price_per_week", e.target.value)} />
               <Input label="Security Deposit (₱) *" type="number" min="0" placeholder="2000" value={form.security_deposit} onChange={e => set("security_deposit", e.target.value)} />
@@ -156,7 +156,7 @@ export default function CreateListingPage() {
           {/* Location */}
           <div className="bg-white border border-[var(--border)] rounded-xl p-5 space-y-4">
             <h2 className="font-semibold">Location</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="City" placeholder="Quezon City" value={form.city} onChange={e => set("city", e.target.value)} />
               <Input label="Full Address" placeholder="Barangay / Street" value={form.location} onChange={e => set("location", e.target.value)} />
             </div>

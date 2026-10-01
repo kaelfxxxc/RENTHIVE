@@ -119,7 +119,7 @@ export default function LandingPage() {
           <div className="flex items-center">
             <Logo className="h-10" />
           </div>
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-[var(--muted-foreground)]">
+          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-[var(--muted-foreground)]">
             <a href="#how-it-works" className="hover:text-[var(--foreground)] transition-colors">How It Works</a>
             <a href="#for-lessors" className="hover:text-[var(--foreground)] transition-colors">For Rentors</a>
             <a href="#security" className="hover:text-[var(--foreground)] transition-colors">Security</a>

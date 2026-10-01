@@ -1,0 +1,17 @@
+{
+  "id": "./",
+  "name": "RentHive — Your Ultimate Rental Solution",
+  "short_name": "RentHive",
+  "description": "Discover products to rent, list your items, and manage your rentals.",
+  "lang": "en",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fffbf5",
+  "theme_color": "#D97706",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
