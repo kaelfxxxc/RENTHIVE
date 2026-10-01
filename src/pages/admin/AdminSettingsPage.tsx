@@ -122,7 +122,7 @@ export default function AdminSettingsPage() {
           <div className="grid grid-cols-2 gap-4">
             <Input label="Platform Fee (%)" type="number" min="0" max="50" value={platform.platformFeePercent}
               onChange={e => setPlatform(p => ({ ...p, platformFeePercent: e.target.value }))}
-              hint="Deducted from lessor earnings on completed rentals" />
+              hint="Deducted from rentor earnings on completed rentals" />
             <Input label="Reservation Fee (%)" type="number" min="0" max="100" value={platform.reservationFeePercent}
               onChange={e => setPlatform(p => ({ ...p, reservationFeePercent: e.target.value }))}
               hint="Share of the rental fee paid upfront to reserve" />
@@ -136,7 +136,7 @@ export default function AdminSettingsPage() {
         </Section>
 
         <Section icon={<Shield className="w-4 h-4 text-amber-500" />} title="Trust &amp; Safety">
-          <Toggle label="Require identity verification" sub="Lessors must be verified before publishing listings"
+          <Toggle label="Require identity verification" sub="Rentors must be verified before publishing listings"
             value={platform.requireVerification} onChange={v => setPlatform(p => ({ ...p, requireVerification: v }))} />
           <Toggle label="Allow guest browsing" sub="Non-registered users can view listings"
             value={platform.allowGuestBrowse} onChange={v => setPlatform(p => ({ ...p, allowGuestBrowse: v }))} />

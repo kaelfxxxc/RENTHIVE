@@ -102,7 +102,7 @@ export default function WriteReviewPage() {
           </div>
           <div>
             <p className="font-semibold">{rental.listing?.title}</p>
-            <p className="text-sm text-[var(--muted-foreground)]">Lessor: {rental.lessor?.full_name}</p>
+            <p className="text-sm text-[var(--muted-foreground)]">Rentor: {rental.lessor?.full_name}</p>
           </div>
         </div>
 
@@ -122,7 +122,7 @@ export default function WriteReviewPage() {
             value={comment}
             onChange={e => setComment(e.target.value)}
             rows={4}
-            placeholder="Describe your experience — was the item as described? How was the handover? Would you recommend this lessor?"
+            placeholder="Describe your experience — was the item as described? How was the handover? Would you recommend this rentor?"
             className="w-full border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-sm outline-none resize-none focus:border-[var(--primary)] transition-colors"
           />
           <p className="text-xs text-[var(--muted-foreground)] mt-1.5">{comment.length}/500 characters</p>

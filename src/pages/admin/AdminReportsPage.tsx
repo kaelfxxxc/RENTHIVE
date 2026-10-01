@@ -168,7 +168,7 @@ export default function AdminReportsPage() {
                       <Tooltip />
                       <Legend />
                       <Bar dataKey="renters" fill="#6366F1" radius={[4, 4, 0, 0]} name="New Renters" />
-                      <Bar dataKey="lessors" fill="#F59E0B" radius={[4, 4, 0, 0]} name="New Lessors" />
+                      <Bar dataKey="lessors" fill="#F59E0B" radius={[4, 4, 0, 0]} name="New Rentors" />
                       <Bar dataKey="rentals" fill="#0D9488" radius={[4, 4, 0, 0]} name="Rentals" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -200,7 +200,7 @@ export default function AdminReportsPage() {
                 {roleData.map((r, i) => (
                   <div key={r.role} className="flex-1 min-w-24 rounded-xl p-4 text-center" style={{ backgroundColor: PIE_COLORS[i] + "20" }}>
                     <p className="text-2xl font-bold" style={{ color: PIE_COLORS[i] }}>{r.count}</p>
-                    <p className="text-sm capitalize text-[var(--muted-foreground)]">{r.role}s</p>
+                    <p className="text-sm capitalize text-[var(--muted-foreground)]">{r.role === "lessor" ? "Rentors" : `${r.role}s`}</p>
                   </div>
                 ))}
               </div>

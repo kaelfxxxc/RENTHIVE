@@ -90,7 +90,7 @@ export function LessorLayout({ children }: LessorLayoutProps) {
             <Avatar src={profile?.avatar_url} name={profile?.full_name} size="sm" />
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-white truncate">{profile?.full_name}</p>
-              <p className="text-xs text-white/40">Lessor</p>
+              <p className="text-xs text-white/40">Rentor</p>
             </div>
           </div>
         </div>

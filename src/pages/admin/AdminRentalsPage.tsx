@@ -55,7 +55,7 @@ export default function AdminRentalsPage() {
         <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>All Rentals</h1>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <Input placeholder="Search by listing, renter, or lessor..." value={search} onChange={e => setSearch(e.target.value)} className="sm:max-w-sm" />
+          <Input placeholder="Search by listing, renter, or rentor..." value={search} onChange={e => setSearch(e.target.value)} className="sm:max-w-sm" />
           <div className="flex gap-2 overflow-x-auto pb-1">
             {STATUSES.map(s => (
               <button key={s} onClick={() => setFilter(s)}
@@ -74,7 +74,7 @@ export default function AdminRentalsPage() {
               <table className="w-full text-sm">
                 <thead className="border-b border-[var(--border)] bg-[var(--muted)]">
                   <tr>
-                    {["Listing", "Renter", "Lessor", "Dates", "Total", "Status", "Created"].map(h => (
+                    {["Listing", "Renter", "Rentor", "Dates", "Total", "Status", "Created"].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">{h}</th>
                     ))}
                   </tr>

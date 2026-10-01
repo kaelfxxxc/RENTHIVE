@@ -153,7 +153,7 @@ export default function ProfilePage({ layout: Layout }: ProfilePageProps) {
                 { label: "Full Name", value: profile.full_name },
                 { label: "Email", value: profile.email },
                 { label: "Phone", value: profile.phone || "Not set" },
-                { label: "Account Type", value: profile.role.charAt(0).toUpperCase() + profile.role.slice(1) },
+                { label: "Account Type", value: profile.role === "lessor" ? "Rentor" : profile.role.charAt(0).toUpperCase() + profile.role.slice(1) },
               ].map(field => (
                 <div key={field.label} className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0">
                   <span className="text-sm text-[var(--muted-foreground)]">{field.label}</span>

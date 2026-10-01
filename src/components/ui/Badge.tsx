@@ -31,6 +31,7 @@ export function Badge({ children, variant = "default", className = "", dot }: Ba
 
 export function statusBadge(status: string) {
   const map: Record<string, { label: string; variant: BadgeVariant }> = {
+    lessor: { label: "Rentor", variant: "default" },
     published: { label: "Published", variant: "success" },
     active: { label: "Active", variant: "success" },
     completed: { label: "Completed", variant: "teal" },

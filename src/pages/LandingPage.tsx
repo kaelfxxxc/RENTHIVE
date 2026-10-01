@@ -39,17 +39,17 @@ const features = [
   { icon: <ShieldCheck className="w-6 h-6 text-teal-600" />, title: "Verified Users", desc: "Every user goes through identity verification before participating in transactions." },
   { icon: <Wallet className="w-6 h-6 text-amber-600" />, title: "Protected Deposits", desc: "Security deposits are tracked and held until the rental is successfully completed." },
   { icon: <Camera className="w-6 h-6 text-blue-600" />, title: "Condition Documentation", desc: "Photo and video documentation at handover and return protects both parties." },
-  { icon: <MessageSquare className="w-6 h-6 text-purple-600" />, title: "In-App Messaging", desc: "Communicate directly with lessors or renters within the platform." },
+  { icon: <MessageSquare className="w-6 h-6 text-purple-600" />, title: "In-App Messaging", desc: "Communicate directly with rentors or renters within the platform." },
   { icon: <Star className="w-6 h-6 text-amber-500" />, title: "Ratings & Reviews", desc: "Build trust through verified ratings from real completed rentals." },
   { icon: <Clock className="w-6 h-6 text-red-500" />, title: "Dispute Resolution", desc: "Dedicated support for resolving disputes fairly when issues arise." },
 ];
 
 const faqs = [
-  { q: "How does RentHive protect my security deposit?", a: "Your deposit is tracked in our system from the moment you pay it. It's only released after the lessor confirms the product was returned in acceptable condition. If there's a dispute, our team reviews the documentation before any funds are released." },
-  { q: "What if the product I rented gets damaged?", a: "Both parties document the product's condition at handover and return with photos and notes. If damage occurred during the rental, the lessor can file a dispute and our team will review the evidence fairly." },
-  { q: "How do I become a lessor?", a: "Select 'Lessor' as your account type during registration. After verifying your identity, you can create listings, set your own prices and terms, and start earning from your idle assets." },
+  { q: "How does RentHive protect my security deposit?", a: "Your deposit is tracked in our system from the moment you pay it. It's only released after the rentor confirms the product was returned in acceptable condition. If there's a dispute, our team reviews the documentation before any funds are released." },
+  { q: "What if the product I rented gets damaged?", a: "Both parties document the product's condition at handover and return with photos and notes. If damage occurred during the rental, the rentor can file a dispute and our team will review the evidence fairly." },
+  { q: "How do I become a rentor?", a: "Select 'Rentor' as your account type during registration. After verifying your identity, you can create listings, set your own prices and terms, and start earning from your idle assets." },
   { q: "Is there a fee to use RentHive?", a: "RentHive charges a small platform fee on completed transactions. Listing your products is free. The exact fee structure is shown during the rental request process before you commit." },
-  { q: "What happens if a lessor cancels?", a: "If a lessor cancels a confirmed rental, our cancellation policy ensures renters are protected. Refunds are processed according to the agreed cancellation policy shown on the listing." },
+  { q: "What happens if a rentor cancels?", a: "If a rentor cancels a confirmed rental, our cancellation policy ensures renters are protected. Refunds are processed according to the agreed cancellation policy shown on the listing." },
 ];
 
 export default function LandingPage() {
@@ -121,7 +121,7 @@ export default function LandingPage() {
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-[var(--muted-foreground)]">
             <a href="#how-it-works" className="hover:text-[var(--foreground)] transition-colors">How It Works</a>
-            <a href="#for-lessors" className="hover:text-[var(--foreground)] transition-colors">For Lessors</a>
+            <a href="#for-lessors" className="hover:text-[var(--foreground)] transition-colors">For Rentors</a>
             <a href="#security" className="hover:text-[var(--foreground)] transition-colors">Security</a>
             <a href="#faq" className="hover:text-[var(--foreground)] transition-colors">FAQ</a>
           </nav>
@@ -152,7 +152,7 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link to="/renter/home"><Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white">Browse Rentals <ArrowRight className="w-4 h-4 ml-1" /></Button></Link>
-              <Link to="/register?role=lessor"><Button size="lg" variant="primary" className="bg-amber-500! hover:bg-amber-600! text-white!">List Your Product</Button></Link>
+              <Link to="/register?role=rentor"><Button size="lg" variant="primary" className="bg-amber-500! hover:bg-amber-600! text-white!">List Your Product</Button></Link>
             </div>
             <div className="flex items-center gap-6 mt-8 text-sm text-white/50">
               <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" />Identity verified</span>
@@ -278,7 +278,7 @@ export default function LandingPage() {
               icon={<Package className="w-7 h-7" />}
               title="No items listed yet"
               description="Nothing is available to rent right now. Check back soon — or list something of your own."
-              action={<Link to="/register?role=lessor"><Button variant="outline">List Your Product</Button></Link>}
+              action={<Link to="/register?role=rentor"><Button variant="outline">List Your Product</Button></Link>}
             />
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -324,7 +324,7 @@ export default function LandingPage() {
             <h3 className="text-2xl font-bold mb-3" style={{ fontFamily: "var(--font-display)" }}>For Renters</h3>
             <p className="text-[var(--muted-foreground)] mb-5 text-sm leading-relaxed">Access thousands of items without the cost of ownership. From tools you need once to cameras for your next trip.</p>
             <ul className="space-y-2 text-sm mb-6">
-              {["Search by location, category, and dates", "View verified lessor profiles and ratings", "Secure payment with deposit protection", "Photo-documented condition verification"].map(item => (
+              {["Search by location, category, and dates", "View verified rentor profiles and ratings", "Secure payment with deposit protection", "Photo-documented condition verification"].map(item => (
                 <li key={item} className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />{item}</li>
               ))}
             </ul>
@@ -332,14 +332,14 @@ export default function LandingPage() {
           </div>
           <div id="for-lessors" className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 text-white">
             <Wallet className="w-10 h-10 text-amber-400 mb-4" />
-            <h3 className="text-2xl font-bold mb-3" style={{ fontFamily: "var(--font-display)" }}>For Lessors</h3>
+            <h3 className="text-2xl font-bold mb-3" style={{ fontFamily: "var(--font-display)" }}>For Rentors</h3>
             <p className="text-white/70 mb-5 text-sm leading-relaxed">Turn your idle assets into income. List anything from power tools to camera equipment and earn while your items aren't in use.</p>
             <ul className="space-y-2 text-sm mb-6">
               {["Set your own prices and availability", "Verified renter profiles before acceptance", "Dashboard analytics and earnings tracking", "Protected deposit system and dispute support"].map(item => (
                 <li key={item} className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />{item}</li>
               ))}
             </ul>
-            <Link to="/register?role=lessor"><Button className="bg-amber-500 hover:bg-amber-600 text-white">Start Listing</Button></Link>
+            <Link to="/register?role=rentor"><Button className="bg-amber-500 hover:bg-amber-600 text-white">Start Listing</Button></Link>
           </div>
         </div>
       </section>
@@ -422,9 +422,9 @@ export default function LandingPage() {
             <Link to="/login?role=renter" onClick={() => setShowAuthChoice(false)} className="block">
               <Button size="lg" className="w-full">Renter Sign In</Button>
             </Link>
-            <Link to="/login?role=lessor" onClick={() => setShowAuthChoice(false)} className="block">
+            <Link to="/login?role=rentor" onClick={() => setShowAuthChoice(false)} className="block">
               <Button size="lg" variant="outline" className="w-full border-amber-200 text-[var(--foreground)] hover:bg-amber-50">
-                Lessor Sign In
+                Rentor Sign In
               </Button>
             </Link>
           </div>

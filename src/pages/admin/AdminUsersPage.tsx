@@ -93,7 +93,7 @@ export default function AdminUsersPage() {
           <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="border border-[var(--border)] bg-white rounded-xl px-3 py-2 text-sm outline-none">
             <option value="">All Roles</option>
             <option value="renter">Renters</option>
-            <option value="lessor">Lessors</option>
+            <option value="lessor">Rentors</option>
             <option value="admin">Admins</option>
           </select>
         </div>

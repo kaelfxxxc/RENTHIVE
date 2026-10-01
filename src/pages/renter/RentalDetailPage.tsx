@@ -11,6 +11,7 @@ import { useToast } from "../../components/ui/Toast";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePlatformSettings } from "../../contexts/SettingsContext";
 import type { RentalRequest, Payment } from "../../types";
+import RentalConditionPhotos from "../../components/shared/RentalConditionPhotos";
 
 const TEST_MODE = !import.meta.env.VITE_PAYMENT_LIVE;
 
@@ -210,6 +211,8 @@ export default function RentalDetailPage() {
               </div>
             </div>
 
+            <RentalConditionPhotos rental={rental} />
+
             {/* Payment breakdown */}
             <div className="bg-white border border-[var(--border)] rounded-2xl p-5">
               <h3 className="font-semibold mb-4">Payment Breakdown</h3>
@@ -295,7 +298,7 @@ export default function RentalDetailPage() {
 
             {rental.lessor && (
               <div className="bg-white border border-[var(--border)] rounded-2xl p-5">
-                <h3 className="font-semibold mb-3">Lessor</h3>
+                <h3 className="font-semibold mb-3">Rentor</h3>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-sm font-bold text-amber-700">
                     {rental.lessor.full_name?.[0] || "?"}
@@ -309,7 +312,7 @@ export default function RentalDetailPage() {
                 </div>
                 <Button variant="outline" size="sm" className="w-full" icon={<MessageSquare className="w-4 h-4" />}
                   onClick={() => navigate(`/renter/messages?with=${rental.lessor_id}&rental=${rental.id}`)}>
-                  Message Lessor
+                  Message Rentor
                 </Button>
               </div>
             )}

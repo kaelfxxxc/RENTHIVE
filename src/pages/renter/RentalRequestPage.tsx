@@ -79,7 +79,7 @@ export default function RentalRequestPage() {
     if (error) {
       toastError("Request failed", "Unable to submit rental request. Please try again.");
     } else {
-      success("Request sent!", "Your rental request has been sent to the lessor.");
+      success("Request sent!", "Your rental request has been sent to the rentor.");
       navigate(`/renter/rentals/${data.id}`);
     }
     setSubmitting(false);
@@ -99,7 +99,7 @@ export default function RentalRequestPage() {
           <div className="bg-white border border-[var(--border)] rounded-xl p-4">
             <h3 className="font-semibold text-sm text-[var(--muted-foreground)] mb-3">Rental Summary</h3>
             <p className="font-bold">{listing.title}</p>
-            <p className="text-sm text-[var(--muted-foreground)]">Lessor: {listing.lessor?.full_name}</p>
+            <p className="text-sm text-[var(--muted-foreground)]">Rentor: {listing.lessor?.full_name}</p>
             <div className="grid grid-cols-2 gap-3 mt-3 text-sm">
               <div className="bg-[var(--muted)] rounded-lg p-3">
                 <p className="text-xs text-[var(--muted-foreground)]">Start</p>
@@ -133,7 +133,7 @@ export default function RentalRequestPage() {
 
           {/* Message */}
           <div className="bg-white border border-[var(--border)] rounded-xl p-4">
-            <h3 className="font-semibold text-sm mb-2">Message to Lessor <span className="font-normal text-[var(--muted-foreground)]">(optional)</span></h3>
+            <h3 className="font-semibold text-sm mb-2">Message to Rentor <span className="font-normal text-[var(--muted-foreground)]">(optional)</span></h3>
             <textarea
               value={message}
               onChange={e => setMessage(e.target.value)}
@@ -155,7 +155,7 @@ export default function RentalRequestPage() {
             </div>
             {platformFee > 0 && (
               <p className="text-xs text-[var(--muted-foreground)] pt-1">
-                Includes a {settings.platform_fee_percent}% platform fee (₱{platformFee.toLocaleString()}) taken from the rental fee — the lessor receives the remainder.
+                Includes a {settings.platform_fee_percent}% platform fee (₱{platformFee.toLocaleString()}) taken from the rental fee — the rentor receives the remainder.
               </p>
             )}
           </div>
@@ -163,7 +163,7 @@ export default function RentalRequestPage() {
           <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 flex gap-3">
             <Shield className="w-5 h-5 text-teal-600 mt-0.5 shrink-0" />
             <p className="text-xs text-teal-700 leading-relaxed">
-              You will only be charged after the lessor accepts your request. A {settings.reservation_fee_percent}% reservation
+              You will only be charged after the rentor accepts your request. A {settings.reservation_fee_percent}% reservation
               fee (₱{reservationDue.toLocaleString()}) is due first, with the balance payable before handover. The security
               deposit is refunded after successful return.
             </p>

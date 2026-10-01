@@ -112,7 +112,7 @@ export default function MessagesPage({ layout: Layout }: MessagesPageProps) {
           <div className="flex-1 overflow-y-auto">
             {conversations.length === 0 ? (
               <div className="p-4">
-                <EmptyState icon={<MessageSquare className="w-6 h-6" />} title="No conversations" description="Message a lessor from any listing." />
+                <EmptyState icon={<MessageSquare className="w-6 h-6" />} title="No conversations" description="Message a rentor from any listing." />
               </div>
             ) : (
               conversations.map(conv => {
@@ -138,7 +138,7 @@ export default function MessagesPage({ layout: Layout }: MessagesPageProps) {
         <div className="flex-1 flex flex-col min-w-0">
           {!selectedConv ? (
             <div className="flex-1 flex items-center justify-center">
-              <EmptyState icon={<MessageSquare className="w-8 h-8" />} title="Select a conversation" description="Choose a conversation or message a lessor from a listing." />
+              <EmptyState icon={<MessageSquare className="w-8 h-8" />} title="Select a conversation" description="Choose a conversation or message a rentor from a listing." />
             </div>
           ) : (
             <>

@@ -167,7 +167,7 @@ export default function AdminDashboardPage() {
               value={String(stats?.open_disputes ?? 0)} color="bg-red-50" />
             <StatCard icon={<TrendingUp className="w-5 h-5 text-purple-600" />} label="Completed Rentals"
               value={String(stats?.completed_rentals ?? 0)} color="bg-purple-50" />
-            <StatCard icon={<Activity className="w-5 h-5 text-pink-600" />} label="Active Lessors"
+            <StatCard icon={<Activity className="w-5 h-5 text-pink-600" />} label="Active Rentors"
               value={String(stats?.lessors ?? 0)} color="bg-pink-50" />
           </div>
         )}
@@ -230,7 +230,7 @@ label={(props: any) => `${props.name} ${((props.percent || 0) * 100).toFixed(0)}
                   <Tooltip />
                   <Legend iconType="circle" iconSize={8} />
                   <Bar dataKey="renters" fill="#D97706" radius={[4, 4, 0, 0]} name="Renters" />
-                  <Bar dataKey="lessors" fill="#0D9488" radius={[4, 4, 0, 0]} name="Lessors" />
+                  <Bar dataKey="lessors" fill="#0D9488" radius={[4, 4, 0, 0]} name="Rentors" />
                 </BarChart>
               </ResponsiveContainer>
             )}

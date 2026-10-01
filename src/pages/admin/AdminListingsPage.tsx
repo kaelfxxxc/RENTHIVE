@@ -71,7 +71,7 @@ export default function AdminListingsPage() {
             <table className="w-full text-sm">
               <thead className="bg-[var(--muted)] border-b border-[var(--border)]">
                 <tr>
-                  {["Listing", "Lessor", "Category", "Price/day", "Status", "Actions"].map(h => (
+                  {["Listing", "Rentor", "Category", "Price/day", "Status", "Actions"].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>

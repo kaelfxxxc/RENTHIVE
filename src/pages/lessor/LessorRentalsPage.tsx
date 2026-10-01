@@ -11,6 +11,7 @@ import { TransactionTimeline } from "../../components/ui/TransactionTimeline";
 import { useToast } from "../../components/ui/Toast";
 import { useAuth } from "../../contexts/AuthContext";
 import type { RentalRequest } from "../../types";
+import RentalConditionPhotos from "../../components/shared/RentalConditionPhotos";
 
 const tabs = ["all", "active", "confirmed", "returned", "completed"] as const;
 type Tab = typeof tabs[number];
@@ -144,6 +145,8 @@ export default function LessorRentalsPage() {
             </div>
 
             <TransactionTimeline steps={handoverSteps(selected)} />
+
+            <RentalConditionPhotos key={selected.id} rental={selected} />
 
             <div className="grid grid-cols-3 gap-3 text-sm text-center">
               <div className="bg-[var(--muted)] rounded-xl p-3">

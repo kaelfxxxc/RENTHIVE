@@ -22,11 +22,12 @@ const ID_TYPES = [
 interface FileUploadProps {
   label: string;
   hint?: string;
+  accept?: string;
   file: File | null;
   onChange: (f: File | null) => void;
 }
 
-function FileUpload({ label, hint, file, onChange }: FileUploadProps) {
+function FileUpload({ label, hint, accept = "image/*,.pdf", file, onChange }: FileUploadProps) {
   return (
     <div>
       <label className="text-sm font-medium text-[var(--foreground)] block mb-1.5">{label}</label>
@@ -43,7 +44,7 @@ function FileUpload({ label, hint, file, onChange }: FileUploadProps) {
           <Upload className="w-5 h-5 text-[var(--muted-foreground)]" />
           <span className="text-sm text-[var(--muted-foreground)]">Click to upload</span>
           {hint && <span className="text-xs text-[var(--muted-foreground)]">{hint}</span>}
-          <input type="file" accept="image/*,.pdf" className="hidden" onChange={e => onChange(e.target.files?.[0] || null)} />
+          <input type="file" accept={accept} aria-label={label} className="hidden" onChange={e => onChange(e.target.files?.[0] || null)} />
         </label>
       )}
     </div>
@@ -89,7 +90,15 @@ export default function IdentityVerificationPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!idType || !frontFile || !selfieFile) {
-      toastError("Missing documents", "Please provide ID type, front of ID, and a selfie.");
+      toastError("Missing documents", "Please select your ID type and upload the front of your ID and a photo of yourself holding it.");
+      return;
+    }
+    if (!selfieFile.type.startsWith("image/")) {
+      toastError("Invalid photo", "Upload an image of yourself holding your ID.");
+      return;
+    }
+    if ([frontFile, backFile, selfieFile].some(file => file && file.size > 5 * 1024 * 1024)) {
+      toastError("File too large", "Each document or photo must be 5MB or smaller.");
       return;
     }
     setSubmitting(true);
@@ -151,8 +160,9 @@ export default function IdentityVerificationPage() {
           </div>
 
           <div className="bg-white border border-[var(--border)] rounded-2xl p-5">
-            <h2 className="font-semibold mb-4">Selfie with ID</h2>
-            <FileUpload label="Photo holding your ID *" hint="Hold your ID next to your face — must be clearly visible" file={selfieFile} onChange={setSelfieFile} />
+            <h2 className="font-semibold mb-2">Photo of you holding your ID</h2>
+            <p className="text-sm text-[var(--muted-foreground)] mb-4">Hold the same government ID next to your face. Make sure your entire face and the details on your ID are clearly visible, with good lighting and no filters.</p>
+            <FileUpload label="Upload your photo holding your ID *" hint="Image files only — max 5MB" accept="image/*" file={selfieFile} onChange={setSelfieFile} />
           </div>
 
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-700 leading-relaxed">

@@ -174,7 +174,7 @@ export default function PublicListingDetailPage() {
 
             {lessor && (
               <div className="border border-[var(--border)] rounded-xl p-4">
-                <h3 className="font-semibold mb-3">Lessor</h3>
+                <h3 className="font-semibold mb-3">Rentor</h3>
                 <div className="flex items-center gap-3">
                   <Avatar src={lessor.avatar_url} name={lessor.full_name} size="lg" />
                   <div>
@@ -251,7 +251,7 @@ export default function PublicListingDetailPage() {
               </Button>
               <p className="text-xs text-center text-[var(--muted-foreground)]">
                 {user
-                  ? "You won't be charged until the lessor accepts"
+                  ? "You won't be charged until the rentor accepts"
                   : "You'll be asked to sign in first"}
               </p>
             </div>

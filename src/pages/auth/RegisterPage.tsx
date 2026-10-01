@@ -70,7 +70,7 @@ export default function RegisterPage() {
                 ? <Users className="w-5 h-5 text-amber-600 shrink-0" />
                 : <Briefcase className="w-5 h-5 text-teal-600 shrink-0" />}
               <div>
-                <p className="text-sm font-semibold">{presetRole === "renter" ? "Renter Account" : "Lessor Account"}</p>
+                <p className="text-sm font-semibold">{presetRole === "renter" ? "Renter Account" : "Rentor Account"}</p>
                 <p className="text-xs text-[var(--muted-foreground)]">{presetRole === "renter" ? "Browse & rent items" : "List & earn from items"}</p>
               </div>
             </div>
@@ -89,7 +89,7 @@ export default function RegisterPage() {
                 className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${role === "lessor" ? "border-[var(--primary)] bg-amber-50" : "border-[var(--border)] hover:border-amber-200"}`}>
                 <Briefcase className={`w-6 h-6 ${role === "lessor" ? "text-[var(--primary)]" : "text-[var(--muted-foreground)]"}`} />
                 <div className="text-center">
-                  <p className="text-sm font-semibold">Lessor</p>
+                  <p className="text-sm font-semibold">Rentor</p>
                   <p className="text-xs text-[var(--muted-foreground)]">List & earn from items</p>
                 </div>
               </button>

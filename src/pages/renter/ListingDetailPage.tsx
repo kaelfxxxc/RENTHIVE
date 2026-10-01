@@ -172,7 +172,7 @@ export default function ListingDetailPage() {
             {/* Lessor */}
             {lessor && (
               <div className="border border-[var(--border)] rounded-xl p-4">
-                <h3 className="font-semibold mb-3">Lessor</h3>
+                <h3 className="font-semibold mb-3">Rentor</h3>
                 <div className="flex items-center gap-3">
                   <Avatar src={lessor.avatar_url} name={lessor.full_name} size="lg" />
                   <div>
@@ -267,7 +267,7 @@ export default function ListingDetailPage() {
               <Button onClick={handleRent} className="w-full" size="lg" icon={<Calendar className="w-4 h-4" />}>
                 Request Rental
               </Button>
-              <p className="text-xs text-center text-[var(--muted-foreground)]">You won't be charged until the lessor accepts</p>
+              <p className="text-xs text-center text-[var(--muted-foreground)]">You won't be charged until the rentor accepts</p>
             </div>
           </div>
         </div>
