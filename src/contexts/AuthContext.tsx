@@ -23,9 +23,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
-    const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
-    if (data) setProfile(data as Profile);
+  const fetchProfile = async (user: User) => {
+    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    if (data) {
+      setProfile(data as Profile);
+      return;
+    }
+
+    // OAuth users may already exist in auth.users while their profile row is
+    // missing (for example, if the signup trigger was not installed). Create
+    // only that missing row and keep existing roles/profile data untouched.
+    const metadata = user.user_metadata ?? {};
+    const fullName = metadata.full_name ?? metadata.name ?? null;
+    const avatarUrl = metadata.avatar_url ?? metadata.picture ?? null;
+    const { data: createdProfile } = await supabase
+      .from("profiles")
+      .upsert({
+        id: user.id,
+        email: user.email ?? null,
+        full_name: typeof fullName === "string" ? fullName : null,
+        avatar_url: typeof avatarUrl === "string" ? avatarUrl : null,
+        role: "renter",
+      }, { onConflict: "id", ignoreDuplicates: true })
+      .select("*")
+      .maybeSingle();
+
+    if (createdProfile) {
+      setProfile(createdProfile as Profile);
+      return;
+    }
+
+    // ignoreDuplicates may return no row when another request or the database
+    // trigger created it concurrently. Read the canonical row in that case.
+    const { data: existingProfile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    setProfile((existingProfile as Profile | null) ?? null);
   };
 
   const refreshProfile = async () => {
@@ -36,14 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id).finally(() => setLoading(false));
+      if (session?.user) fetchProfile(session.user).finally(() => setLoading(false));
       else setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
+      if (session?.user) void fetchProfile(session.user);
       else setProfile(null);
     });
 
