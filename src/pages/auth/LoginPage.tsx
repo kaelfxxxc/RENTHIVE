@@ -111,7 +111,7 @@ export default function LoginPage() {
         <div className="login-card">
           <header className="login-card-header">
             <h2>Your Space Awaits.</h2>
-            <p>SSign in to access everything that matters.</p>
+            <p>Sign in to access everything that matters.</p>
           </header>
           <form onSubmit={handleSubmit} className="login-form">
             <fieldset className="login-role-fieldset">
