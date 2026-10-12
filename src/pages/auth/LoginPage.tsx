@@ -110,12 +110,12 @@ export default function LoginPage() {
       <section className="login-form-panel" aria-label="Sign in">
         <div className="login-card">
           <header className="login-card-header">
-            <h2>Welcome back</h2>
-            <p>Sign in to continue</p>
+            <h2>Your Space Awaits.</h2>
+            <p>SSign in to access everything that matters.</p>
           </header>
           <form onSubmit={handleSubmit} className="login-form">
             <fieldset className="login-role-fieldset">
-              <legend>I'm signing in as</legend>
+              <legend>Signing in as</legend>
               <div className="login-role-switch">
                 {(["renter", "lessor"] as const).map(role => <button key={role} type="button" aria-pressed={selectedRole === role} disabled={loading || oauthLoading !== null} onClick={() => setSelectedRole(role)} className={selectedRole === role ? "is-selected" : ""}>{role === "renter" ? <UserRound size={22} /> : <Building2 size={22} />}{role === "renter" ? "Renter" : "Rentor"}</button>)}
               </div>
