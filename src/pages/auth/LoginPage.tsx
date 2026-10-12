@@ -31,17 +31,19 @@ export default function LoginPage() {
   const [showRolePicker, setShowRolePicker] = useState(false);
   const [selectedRole, setSelectedRole] = useState<"renter" | "lessor">(searchParams.get("role") === "lessor" ? "lessor" : "renter");
   const roleLabel = selectedRole === "renter" ? "Renter" : "Rentor";
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<"google" | "facebook" | null>(null);
 
-  const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
+  const handleOAuthSignIn = async (provider: "google" | "facebook") => {
+    setOauthLoading(provider);
     const target = safeRedirect(searchParams.get("redirect")) || "/dashboard";
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
+      provider,
       options: { redirectTo: `${window.location.origin}${target}` },
     });
-    if (error) toastError("Google sign in unavailable", error.message);
-    setGoogleLoading(false);
+    if (error) {
+      toastError(`${provider === "google" ? "Google" : "Facebook"} sign in unavailable`, error.message);
+      setOauthLoading(null);
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -115,7 +117,7 @@ export default function LoginPage() {
             <fieldset className="login-role-fieldset">
               <legend>I'm signing in as</legend>
               <div className="login-role-switch">
-                {(["renter", "lessor"] as const).map(role => <button key={role} type="button" aria-pressed={selectedRole === role} disabled={loading || googleLoading} onClick={() => setSelectedRole(role)} className={selectedRole === role ? "is-selected" : ""}>{role === "renter" ? <UserRound size={22} /> : <Building2 size={22} />}{role === "renter" ? "Renter" : "Rentor"}</button>)}
+                {(["renter", "lessor"] as const).map(role => <button key={role} type="button" aria-pressed={selectedRole === role} disabled={loading || oauthLoading !== null} onClick={() => setSelectedRole(role)} className={selectedRole === role ? "is-selected" : ""}>{role === "renter" ? <UserRound size={22} /> : <Building2 size={22} />}{role === "renter" ? "Renter" : "Rentor"}</button>)}
               </div>
             </fieldset>
             <Input label="Email address" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" prefix={<Mail size={21} />} />
@@ -123,10 +125,13 @@ export default function LoginPage() {
               <Input label="Password" type={showPass ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" prefix={<LockKeyhole size={21} />} suffix={<button type="button" aria-label={showPass ? "Hide password" : "Show password"} aria-pressed={showPass} onClick={() => setShowPass(!showPass)} className="login-password-toggle">{showPass ? <EyeOff size={21} /> : <Eye size={21} />}</button>} />
               <div className="login-forgot"><Link to="/forgot-password">Forgot your password?</Link></div>
             </div>
-            <Button type="submit" loading={loading} disabled={googleLoading} className="login-submit" size="lg" iconRight={<ArrowRight size={23} />}>Sign in as {roleLabel}</Button>
+            <Button type="submit" loading={loading} disabled={oauthLoading !== null} className="login-submit" size="lg" iconRight={<ArrowRight size={23} />}>Sign in as {roleLabel}</Button>
           </form>
           <div className="login-divider"><span>or continue with</span></div>
-          <button type="button" onClick={handleGoogleSignIn} disabled={loading || googleLoading} className="login-google"><svg width="23" height="23" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20H24v8h11.3A12 12 0 1 1 32.8 14l5.7-5.7A20 20 0 1 0 44 24c0-1.4-.1-2.7-.4-4Z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8A12 12 0 0 1 32.8 14l5.7-5.7A20 20 0 0 0 6.3 14.7Z"/><path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.5-5.3l-6.2-5.2A12 12 0 0 1 12.7 28l-6.6 5.1A20 20 0 0 0 24 44Z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3a12 12 0 0 1-4 5.5l6.2 5.2A20 20 0 0 0 44 24c0-1.4-.1-2.7-.4-4Z"/></svg>{googleLoading ? "Connecting to Google…" : "Continue with Google"}</button>
+          <div className="space-y-3">
+            <button type="button" onClick={() => void handleOAuthSignIn("google")} disabled={loading || oauthLoading !== null} className="login-google"><svg width="23" height="23" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20H24v8h11.3A12 12 0 1 1 32.8 14l5.7-5.7A20 20 0 1 0 44 24c0-1.4-.1-2.7-.4-4Z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8A12 12 0 0 1 32.8 14l5.7-5.7A20 20 0 0 0 6.3 14.7Z"/><path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.5-5.3l-6.2-5.2A12 12 0 0 1 12.7 28l-6.6 5.1A20 20 0 0 0 24 44Z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3a12 12 0 0 1-4 5.5l6.2 5.2A20 20 0 0 0 44 24c0-1.4-.1-2.7-.4-4Z"/></svg>{oauthLoading === "google" ? "Connecting to Google…" : "Continue with Google"}</button>
+            <button type="button" onClick={() => void handleOAuthSignIn("facebook")} disabled={loading || oauthLoading !== null} className="login-google"><svg width="23" height="23" viewBox="0 0 24 24" aria-hidden="true"><path fill="#1877F2" d="M24 12a12 12 0 1 0-13.875 11.85v-8.38H7.08V12h3.045V9.35c0-3.004 1.79-4.663 4.527-4.663 1.31 0 2.68.234 2.68.234v2.95h-1.51c-1.49 0-1.955.925-1.955 1.874V12h3.328l-.532 3.47h-2.796v8.38A12.003 12.003 0 0 0 24 12Z"/><path fill="#fff" d="m16.663 15.47.532-3.47h-3.328v-2.255c0-.95.465-1.874 1.955-1.874h1.51v-2.95s-1.37-.234-2.68-.234c-2.737 0-4.527 1.659-4.527 4.663V12H7.08v3.47h3.045v8.38a12.1 12.1 0 0 0 3.742 0v-8.38h2.796Z"/></svg>{oauthLoading === "facebook" ? "Connecting to Facebook…" : "Continue with Facebook"}</button>
+          </div>
           <p className="login-register">New to RentHive? <button type="button" onClick={() => setShowRolePicker(true)}>Create an account</button></p>
         </div>
       </section>

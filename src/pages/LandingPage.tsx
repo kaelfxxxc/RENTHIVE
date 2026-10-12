@@ -164,9 +164,9 @@ export default function LandingPage() {
             <div className="grid grid-cols-2 gap-3">
               {[
                 { img: "1553062407-98eeb64c6a62", title: "Power Tools", price: "₱450/day" },
-                { img: "1608507719220-2b1e679cee0d", title: "Camera Gear", price: "₱1,200/day" },
+                { img: "1516035069371-29a1b244cc32", title: "Camera Gear", price: "₱1,200/day" },
                 { img: "1558618666-fcd25c85cd64", title: "Camping Equipment", price: "₱600/day" },
-                { img: "1484788984921-03950022c38b", title: "Laptop & Accessories", price: "₱800/day" },
+                { img: "1496181133206-80ce9b88a853", title: "Laptop & Accessories", price: "₱800/day" },
               ].map((item, i) => (
                 <div key={i} className="bg-white/10 rounded-2xl overflow-hidden border border-white/10">
                   <img src={`https://images.unsplash.com/photo-${item.img}?w=300&h=180&fit=crop&auto=format`} alt={item.title} className="w-full h-32 object-cover" />
