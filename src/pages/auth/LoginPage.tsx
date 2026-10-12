@@ -11,9 +11,6 @@ import campingImage from "../../assets/login-camping.jpg";
 
 /**
  * Only same-origin absolute paths are accepted. The value is handed straight
- * to navigate(), so without this a crafted `/login?redirect=https://evil.test`
- * (or the protocol-relative `//evil.test`) would bounce a freshly
- * authenticated user off-site.
  */
 function safeRedirect(raw: string | null): string | null {
   return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : null;
